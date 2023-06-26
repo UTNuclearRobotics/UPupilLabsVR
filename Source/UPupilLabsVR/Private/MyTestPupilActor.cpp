@@ -2,16 +2,18 @@
 // Author: Chifor Tudor
 
 #include "MyTestPupilActor.h"
+#include <zmq.hpp>
 
 AMyTestPupilActor::AMyTestPupilActor()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 }
 
 // Called when the game starts or when spawned
 void AMyTestPupilActor::BeginPlay()
-{	Super::BeginPlay();
+{
+	Super::BeginPlay();
 	UE_LOG(LogTemp, Warning, TEXT("PupilActor>>>>BeginPlay"));
 	//SPAWN PAWN
 	FVector SpawnLocation(300, 0, 100);
@@ -20,7 +22,7 @@ void AMyTestPupilActor::BeginPlay()
 	AAPupilLabsVisualMarkersPawn* CalibrationScenePawn = GetWorld()->SpawnActor<AAPupilLabsVisualMarkersPawn>(AAPupilLabsVisualMarkersPawn::StaticClass(), SpawnLocation, SpawnRotation, SpawnParameters);
 	//SPAWN PAWN
 	PupilComm = FPupilMsgWorker::StartListening();
-	PupilComm->SetVisualsReference(CalibrationScenePawn); 
+	PupilComm->SetVisualsReference(CalibrationScenePawn);
 	PupilComm->OnNewData().AddUObject(this, &AMyTestPupilActor::OnNewPupilData);
 	UE_LOG(LogTemp, Warning, TEXT("[%s][%d]"), TEXT(__FUNCTION__), __LINE__);
 }
@@ -28,15 +30,31 @@ void AMyTestPupilActor::BeginPlay()
 void AMyTestPupilActor::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	UE_LOG(LogTemp, Warning, TEXT("PupilActor>>Tick"));
 }
 
-void AMyTestPupilActor::OnNewPupilData(GazeStruct *GazeStructure)
+void AMyTestPupilActor::OnNewPupilData(GazeStruct* GazeStructure)
 {
 	this->ReceivedGazeStructure = GazeStructure;
 	//UE_LOG(LogTemp, Warning, TEXT("[%s][%d]"), TEXT(__FUNCTION__), __LINE__);
 	UE_LOG(LogTemp, Warning, TEXT("[%s][%d] Norm Data : %f"), TEXT(__FUNCTION__), __LINE__, this->ReceivedGazeStructure->base_data.pupil.ellipse.center.x);
 	UWorld* CurrentWorld = GetWorld();
 	PerformRaycast(CurrentWorld);
+}
+
+void AMyTestPupilActor::NewBeginPlay()
+{
+	UE_LOG(LogTemp, Warning, TEXT("PupilActor>>>>BeginPlay"));
+	//SPAWN PAWN
+	FVector SpawnLocation(300, 0, 100);
+	FRotator SpawnRotation(0.0f, 0.0f, 0.0f);
+	FActorSpawnParameters SpawnParameters = FActorSpawnParameters();
+	AAPupilLabsVisualMarkersPawn* CalibrationScenePawn = GetWorld()->SpawnActor<AAPupilLabsVisualMarkersPawn>(AAPupilLabsVisualMarkersPawn::StaticClass(), SpawnLocation, SpawnRotation, SpawnParameters);
+	//SPAWN PAWN
+	PupilComm = FPupilMsgWorker::StartListening();
+	PupilComm->SetVisualsReference(CalibrationScenePawn);
+	PupilComm->OnNewData().AddUObject(this, &AMyTestPupilActor::OnNewPupilData);
+	UE_LOG(LogTemp, Warning, TEXT("[%s][%d]"), TEXT(__FUNCTION__), __LINE__);
 }
 
 void AMyTestPupilActor::PerformRaycast(UWorld* CurrentWorld)
@@ -50,7 +68,7 @@ void AMyTestPupilActor::PerformRaycast(UWorld* CurrentWorld)
 	float YGaze = ReceivedGazeStructure->base_data.pupil.norm_pos.y;
 	if (GEngine->GameViewport && GEngine->GameViewport->Viewport)
 	{
-		const FVector2D ViewportSize = FVector2D(GEngine->GameViewport->Viewport->GetSizeXY());
+		// const FVector2D ViewportSize = FVector2D(GEngine->GameViewport->Viewport->GetSizeXY());
 		FVector WorldLocation;
 		FVector WorldDirection;
 
@@ -67,8 +85,8 @@ void AMyTestPupilActor::PerformRaycast(UWorld* CurrentWorld)
 
 	if (GetWorld()->LineTraceSingleByChannel(*HitResult, TraceStart, TraceEnd, ECC_Visibility, *TraceParams))
 	{
-	//	UE_LOG(LogTemp, Warning, TEXT("[%s][%d]RAYTRACE XXX : %f"), TEXT(__FUNCTION__), __LINE__, XGaze);
-	//	UE_LOG(LogTemp, Warning, TEXT("[%s][%d]RAYTRACE YYY : %f"), TEXT(__FUNCTION__), __LINE__, YGaze);
+		//	UE_LOG(LogTemp, Warning, TEXT("[%s][%d]RAYTRACE XXX : %f"), TEXT(__FUNCTION__), __LINE__, XGaze);
+		//	UE_LOG(LogTemp, Warning, TEXT("[%s][%d]RAYTRACE YYY : %f"), TEXT(__FUNCTION__), __LINE__, YGaze);
 		FVector_NetQuantize var = HitResult->ImpactPoint;
 		FVector HitPointLocation = var;
 		DrawDebugPoint(GetWorld(), TraceEnd, 20, FColor(0, 255, 127), false, 1.03);
@@ -77,7 +95,7 @@ void AMyTestPupilActor::PerformRaycast(UWorld* CurrentWorld)
 		DrawDebugLine(GetWorld(), TraceStart, TraceEnd, FColor(238, 0, 238), true);
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("End Point: %d, %d, %d"), TraceEnd.X, TraceEnd.Y, TraceEnd.Z));
 
-	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("You hit: %s"), *HitResult->Actor->GetName()));
+		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("You hit: %s"), *HitResult->Actor->GetName()));
 	}
 }
 

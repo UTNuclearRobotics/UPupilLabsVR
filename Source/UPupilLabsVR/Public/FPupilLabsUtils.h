@@ -4,16 +4,18 @@
 #pragma once
 
 #include "Core.h"
-#include "LogMacros.h"
+#include "Logging/LogMacros.h"
 #include "zmq.hpp"
 #include "zmq_addon.hpp"
-#include "Engine.h"
+#include "Engine/Engine.h"
 /**
 * \MSGPACK_USE_CPP03 has been applied to use the CPP03 _t implementations instead of _type.
 *  Any usage of CPP011 calls from msgpack will not work.
 *  As of now the mvsc compiler does not work with CPP11.
 */
-#define   MSGPACK_USE_CPP03
+// #define   MSGPACK_USE_CPP03
+
+#undef check
 #include "msgpack.hpp"
 #include "GazeStruct.h"
 #include "APupilLabsVisualMarkersPawn.h"

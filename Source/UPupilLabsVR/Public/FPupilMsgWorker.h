@@ -3,10 +3,10 @@
 
 #pragma once
 
-#include "Runnable.h"
-#include "RunnableThread.h"
-#include "GenericPlatformProcess.h"
-#include "PlatformProcess.h"
+#include "Core/Public/HAL/Runnable.h"
+#include "Core/Public/HAL/RunnableThread.h"
+#include "GenericPlatform/GenericPlatformProcess.h"
+#include "Core/Public/HAL/PlatformProcess.h"
 
 #include "DrawDebugHelpers.h"
 #include "Engine/Engine.h"

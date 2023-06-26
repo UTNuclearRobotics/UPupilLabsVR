@@ -3,8 +3,11 @@
 
 #pragma once
 
-#define   MSGPACK_USE_CPP03
+// #define   MSGPACK_USE_CPP03
+
+#undef check
 #include "msgpack.hpp"
+#include "msgpack/adaptor/define_decl.hpp"
 
 struct norm_pos {
 	float x;

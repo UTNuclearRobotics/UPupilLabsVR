@@ -66,12 +66,12 @@ zmq::socket_t* FPupilLabsUtils::ConnectToSubport(zmq::socket_t *ReqSocket,const 
 	ReqSocket->send(subport_request);
 	/* SUBSCRIBER SOCKET */
 	std::string SubPortAddr = Addr + ReceiveSubPort(ReqSocket);
-	zmq::socket_t* SubSocket = new zmq::socket_t(*ZmqContext, ZMQ_SUB);
-	SubSocket->connect(SubPortAddr);
-	SubSocket->setsockopt(ZMQ_SUBSCRIBE, Topic.c_str(), Topic.length());
+	zmq::socket_t* SubSocketTemp = new zmq::socket_t(*ZmqContext, ZMQ_SUB);
+	SubSocketTemp->connect(SubPortAddr);
+	SubSocketTemp->setsockopt(ZMQ_SUBSCRIBE, Topic.c_str(), Topic.length());
 	bSubSocketClosed = false;
 
-	return SubSocket;
+	return SubSocketTemp;
 }
 
 GazeStruct FPupilLabsUtils::ConvertMsgPackToGazeStruct(zmq::message_t info)

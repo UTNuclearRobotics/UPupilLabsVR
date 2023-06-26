@@ -12,7 +12,7 @@ public class msgpack : ModuleRules
 
 		if (Target.Platform == UnrealTargetPlatform.Win64)
 		{  
-            PublicLibraryPaths.Add(Path.Combine(ModuleDirectory, "Libraries"));
+            PublicSystemLibraryPaths.Add(Path.Combine(ModuleDirectory, "Libraries"));
             PublicAdditionalLibraries.Add("msgpackc.lib");
 
             PublicIncludePaths.Add(Path.Combine(ModuleDirectory, "Includes"));

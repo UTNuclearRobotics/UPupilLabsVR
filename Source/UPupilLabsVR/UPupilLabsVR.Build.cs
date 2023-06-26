@@ -7,7 +7,8 @@ public class UPupilLabsVR : ModuleRules
 	public UPupilLabsVR(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
-		
+		bEnableUndefinedIdentifierWarnings = false;
+
 		PublicIncludePaths.AddRange(
 			new string[] {
 				"UPupilLabsVR/Public"

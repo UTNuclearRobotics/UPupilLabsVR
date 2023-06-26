@@ -9,9 +9,9 @@
 #include "Components/StaticMeshComponent.h"
 #include "Kismet/GameplayStatics.h"
 
-#include "ConstructorHelpers.h"
+#include "UObject/ConstructorHelpers.h"
 
-#include "Engine.h"
+#include "Engine/Engine.h"
 #include "APupilLabsVisualMarkersPawn.generated.h"
 
 UCLASS()

@@ -12,7 +12,7 @@ public class libzmq : ModuleRules
 
 		if (Target.Platform == UnrealTargetPlatform.Win64)
 		{  
-            PublicLibraryPaths.Add(Path.Combine(ModuleDirectory, "Libraries"));
+            PublicSystemLibraryPaths.Add(Path.Combine(ModuleDirectory, "Libraries"));
             PublicAdditionalLibraries.Add("libzmq.lib");
 
             PublicIncludePaths.Add(Path.Combine(ModuleDirectory, "Includes"));
