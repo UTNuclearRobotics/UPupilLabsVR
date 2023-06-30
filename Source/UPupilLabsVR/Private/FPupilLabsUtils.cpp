@@ -2,6 +2,9 @@
 // Author: Chifor Tudor
 
 #include "FPupilLabsUtils.h"
+#include "Misc/FileHelper.h"
+#include "Misc/Paths.h"
+#include <sstream>
 
 FPupilLabsUtils::FPupilLabsUtils()
 {//Todo AndreiQ : De ce se cheama de doua ori ?
@@ -10,10 +13,14 @@ FPupilLabsUtils::FPupilLabsUtils()
 	SubSocket = ConnectToSubport(&ReqSocket, PupilTopic);
 
 	SynchronizePupilServiceTimestamp();
-	StartCalibration(&ReqSocket);
+	
+	// StartCalibration(&ReqSocket); // Run the calibration in Pupil Player, not here
 	FPlatformProcess::Sleep(5);
-	UpdateCalibration(&ReqSocket);
+	// StopCalibration(&ReqSocket);
+	// UpdateCalibration(&ReqSocket);
 
+	bCalibrationEnded = true;
+	bCalibrationStarted = true;
 	//SetDetectionMode(&ReqSocket);
 	//StartEyeProcesses(&ReqSocket);
 	//Todo Close All Sockets within an ArrayList of Sockets
@@ -80,8 +87,13 @@ GazeStruct FPupilLabsUtils::ConvertMsgPackToGazeStruct(zmq::message_t info)
 	msgpack::object_handle oh = msgpack::unpack(payload, info.size());
 	msgpack::object deserialized = oh.get();
 	GazeStruct ReceivedGazeStruct;
-	deserialized.convert(ReceivedGazeStruct);
 
+	std::stringstream ss;
+	ss << deserialized;
+	std::string demo = ss.str();
+	deserialized.convert(ReceivedGazeStruct);
+	FString SaveText = UTF8_TO_TCHAR(demo.c_str());
+	SaveData(SaveText);
 	return ReceivedGazeStruct;
 }
 
@@ -158,7 +170,7 @@ void FPupilLabsUtils::InitializeCalibration(zmq::socket_t *ReqSocket)
 
 bool FPupilLabsUtils::CanGaze()
 {
-		if (bCalibrationStarted && bCalibrationEnded)
+	if (bCalibrationStarted && bCalibrationEnded)
 		{
 			return true;
 		}
@@ -240,22 +252,18 @@ void FPupilLabsUtils::StopCalibration(zmq::socket_t* ReqSocket)
 
 	zmq::message_t FirstFrame(FirstBuffer.size());
 	memcpy(FirstFrame.data(), FirstBuffer.c_str(), FirstBuffer.size());
-
 	msgpack::sbuffer SecondBuf;
 	msgpack::pack(SecondBuf, CalibrationShouldStopStruct);
 	zmq::message_t SecondFrame(SecondBuf.size());
 	memcpy(SecondFrame.data(), SecondBuf.data(), SecondBuf.size());
 	//DATA SENDING
 	zmq::multipart_t multipart;
-
 	multipart.add(std::move(FirstFrame));
 	multipart.add(std::move(SecondFrame));
 	multipart.send(*ReqSocket);
-
 	zmq::message_t Reply;
 	ReqSocket->recv(&Reply);
 	
-	UE_LOG(LogTemp, Log, TEXT("[%s][%d]"), TEXT(__FUNCTION__), __LINE__);
 	bCalibrationEnded = true;
 
 }
@@ -443,7 +451,6 @@ void FPupilLabsUtils::UpdateCalibration(zmq::socket_t* ReqSocket)
 			FPupilLabsUtils::AddCalibrationPointReferencePosition(t);
 		}
 	}
-
 	CurrentCalibrationSamples++;//Increment the current calibration sample. (Default sample amount per calibration point is 120)
 
 	if (CurrentCalibrationSamples >= CurrentCalibrationSamplesPerDepth)
@@ -458,13 +465,13 @@ void FPupilLabsUtils::UpdateCalibration(zmq::socket_t* ReqSocket)
 
 			//Send the current relevant calibration data for the current calibration point. _CalibrationPoints returns _calibrationData as an array of a Dictionary<string,object>.
 			FPupilLabsUtils::AddCalibrationReferenceData();
+		}
 
 			if (CurrentCalibrationPoint >= CalibrationType2DPointsNumber)
 
 			{
 			FPupilLabsUtils::StopCalibration(ReqSocket);
 			}
-		}
 
 	}
 
@@ -532,3 +539,9 @@ void FPupilLabsUtils::AddCalibrationPointReferencePosition(float timestamp)
 ////
 ////	multipart.send(*ReqSocket);
 ////}
+
+void FPupilLabsUtils::SaveData(FString SaveText)
+{
+	FString text = *(FPaths::ProjectConfigDir() + UTF8TEXT("SaveFileTest"));
+	FFileHelper::SaveStringToFile(SaveText, *(FPaths::ProjectConfigDir() + UTF8TEXT("SaveFileTest")), FFileHelper::EEncodingOptions::AutoDetect, &IFileManager::Get(), FILEWRITE_Append);
+}

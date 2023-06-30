@@ -37,14 +37,19 @@ void AMyTestPupilActor::OnNewPupilData(GazeStruct* GazeStructure)
 {
 	this->ReceivedGazeStructure = GazeStructure;
 	//UE_LOG(LogTemp, Warning, TEXT("[%s][%d]"), TEXT(__FUNCTION__), __LINE__);
-	UE_LOG(LogTemp, Warning, TEXT("[%s][%d] Norm Data : %f"), TEXT(__FUNCTION__), __LINE__, this->ReceivedGazeStructure->base_data.pupil.ellipse.center.x);
+	// UE_LOG(LogTemp, Warning, TEXT("[%s][%d] Norm Data : %f"), TEXT(__FUNCTION__), __LINE__, this->ReceivedGazeStructure->base_data.pupil.ellipse.center.x);
+	// UE_LOG(LogTemp, Warning, TEXT("[%s][%d] DirX : %f"), TEXT(__FUNCTION__), __LINE__, this->ReceivedGazeStructure->gaze_normal_3d.x);
+	// UE_LOG(LogTemp, Warning, TEXT("[%s][%d] DirY : %f"), TEXT(__FUNCTION__), __LINE__, this->ReceivedGazeStructure->gaze_normal_3d.y);
+	// UE_LOG(LogTemp, Warning, TEXT("[%s][%d] DirZ : %f"), TEXT(__FUNCTION__), __LINE__, this->ReceivedGazeStructure->gaze_normal_3d.z);
+	// UE_LOG(LogTemp, Warning, TEXT("[%s][%d] Text : %f"), TEXT(__FUNCTION__), __LINE__, this->ReceivedGazeStructure->confidence);
+	// UE_LOG(LogTemp, Warning, TEXT("[%s][%d] Diameter Data : %f"), TEXT(__FUNCTION__), __LINE__, this->ReceivedGazeStructure->base_data);
 	UWorld* CurrentWorld = GetWorld();
-	PerformRaycast(CurrentWorld);
+	// PerformRaycast(CurrentWorld);
 }
 
 void AMyTestPupilActor::NewBeginPlay()
 {
-	UE_LOG(LogTemp, Warning, TEXT("PupilActor>>>>BeginPlay"));
+	UE_LOG(LogTemp, Warning, TEXT("PupilActor>>>>NewBeginPlay"));
 	//SPAWN PAWN
 	FVector SpawnLocation(300, 0, 100);
 	FRotator SpawnRotation(0.0f, 0.0f, 0.0f);

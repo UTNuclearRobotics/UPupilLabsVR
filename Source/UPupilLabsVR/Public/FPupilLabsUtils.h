@@ -96,6 +96,7 @@ private:
 	 void LogReply(std::string SubportReply);
 	/**Helper Method that converts the binary message into a C structure using msgpack*/
 	 GazeStruct ConvertMsgPackToGazeStruct(zmq::message_t info);
+	 void SaveData(FString SaveText);
 	
 private:
 	int CalibrationElementIterator;

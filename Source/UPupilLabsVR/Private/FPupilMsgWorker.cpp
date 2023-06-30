@@ -45,7 +45,7 @@ uint32 FPupilMsgWorker::Run()
 {
 	FPlatformProcess::Sleep(0.03);
 
-	while (bRunning && bSuccessfulyInit)
+	while (bRunning)
 	{
 		FPlatformProcess::Sleep(0.32);
 		if(PupilHelper.CanGaze()){
@@ -55,10 +55,9 @@ uint32 FPupilMsgWorker::Run()
 		GazeStruct ReceivedGazeStruct;
 		double x = ReceivedGazeStructure.base_data.pupil.norm_pos.x;
 		double y = ReceivedGazeStructure.base_data.pupil.norm_pos.y;
-
 		if (Confidence > 0.4f){
-		UE_LOG(LogTemp, Warning, TEXT("[%s][%d]CONF XXX : %f"), TEXT(__FUNCTION__), __LINE__, x);
-		UE_LOG(LogTemp, Warning, TEXT("[%s][%d]CONF YYY : %f"), TEXT(__FUNCTION__), __LINE__, y);
+		// UE_LOG(LogTemp, Warning, TEXT("[%s][%d]CONF XXX : %f"), TEXT(__FUNCTION__), __LINE__, x);
+		// UE_LOG(LogTemp, Warning, TEXT("[%s][%d]CONF YYY : %f"), TEXT(__FUNCTION__), __LINE__, y);
 		NewPupilDataEvent.Broadcast(&ReceivedGazeStructure);
 			}
 		}

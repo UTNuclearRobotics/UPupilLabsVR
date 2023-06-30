@@ -38,7 +38,7 @@ private:
 	/* Begin FRunnable interface */
 	bool Init() override;
 	virtual void Stop() override;
-	virtual uint32 Run() override;
+	virtual uint32 Run() override; 
 	/* End FRunnable interface */
 	/** Makes sure this thread has stopped properly */
 	void EnsureCompletion();
