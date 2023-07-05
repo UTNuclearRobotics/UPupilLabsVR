@@ -30,7 +30,7 @@ void AMyTestPupilActor::BeginPlay()
 void AMyTestPupilActor::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	UE_LOG(LogTemp, Warning, TEXT("PupilActor>>Tick"));
+	// UE_LOG(LogTemp, Warning, TEXT("PupilActor>>Tick"));
 }
 
 void AMyTestPupilActor::OnNewPupilData(GazeStruct* GazeStructure)
@@ -42,24 +42,9 @@ void AMyTestPupilActor::OnNewPupilData(GazeStruct* GazeStructure)
 	// UE_LOG(LogTemp, Warning, TEXT("[%s][%d] DirY : %f"), TEXT(__FUNCTION__), __LINE__, this->ReceivedGazeStructure->gaze_normal_3d.y);
 	// UE_LOG(LogTemp, Warning, TEXT("[%s][%d] DirZ : %f"), TEXT(__FUNCTION__), __LINE__, this->ReceivedGazeStructure->gaze_normal_3d.z);
 	// UE_LOG(LogTemp, Warning, TEXT("[%s][%d] Text : %f"), TEXT(__FUNCTION__), __LINE__, this->ReceivedGazeStructure->confidence);
-	// UE_LOG(LogTemp, Warning, TEXT("[%s][%d] Diameter Data : %f"), TEXT(__FUNCTION__), __LINE__, this->ReceivedGazeStructure->base_data);
+	UE_LOG(LogTemp, Warning, TEXT("[%s][%d] eye_center_x : %f"), TEXT(__FUNCTION__), __LINE__, this->ReceivedGazeStructure->eye_center_3d.x);
 	UWorld* CurrentWorld = GetWorld();
 	// PerformRaycast(CurrentWorld);
-}
-
-void AMyTestPupilActor::NewBeginPlay()
-{
-	UE_LOG(LogTemp, Warning, TEXT("PupilActor>>>>NewBeginPlay"));
-	//SPAWN PAWN
-	FVector SpawnLocation(300, 0, 100);
-	FRotator SpawnRotation(0.0f, 0.0f, 0.0f);
-	FActorSpawnParameters SpawnParameters = FActorSpawnParameters();
-	AAPupilLabsVisualMarkersPawn* CalibrationScenePawn = GetWorld()->SpawnActor<AAPupilLabsVisualMarkersPawn>(AAPupilLabsVisualMarkersPawn::StaticClass(), SpawnLocation, SpawnRotation, SpawnParameters);
-	//SPAWN PAWN
-	PupilComm = FPupilMsgWorker::StartListening();
-	PupilComm->SetVisualsReference(CalibrationScenePawn);
-	PupilComm->OnNewData().AddUObject(this, &AMyTestPupilActor::OnNewPupilData);
-	UE_LOG(LogTemp, Warning, TEXT("[%s][%d]"), TEXT(__FUNCTION__), __LINE__);
 }
 
 void AMyTestPupilActor::PerformRaycast(UWorld* CurrentWorld)
@@ -109,3 +94,17 @@ void AMyTestPupilActor::PerformRaycast(UWorld* CurrentWorld)
 //FMatrix CameraProjectionMatrix;
 //FMatrix inv = Inverse(CameraProjectionMatrix * CameraViewMatrix);
 ////
+
+FUEStruct AMyTestPupilActor::PupilData()
+{
+	FUEStruct pupilStruct;
+	pupilStruct.eye_loc.X = ReceivedGazeStructure->eye_center_3d.x;	
+	pupilStruct.eye_loc.Y = ReceivedGazeStructure->eye_center_3d.y;
+	pupilStruct.eye_loc.Z = ReceivedGazeStructure->eye_center_3d.z;
+
+	pupilStruct.gaze_dir.X = ReceivedGazeStructure->gaze_normal_3d.x;
+	pupilStruct.gaze_dir.Y = ReceivedGazeStructure->gaze_normal_3d.y;
+	pupilStruct.gaze_dir.Z = ReceivedGazeStructure->gaze_normal_3d.z;
+
+	return pupilStruct;
+}

@@ -8,6 +8,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Engine/Engine.h"
 #include "FPupilMsgWorker.h"
+#include "UEStruct.h"
 #include "MyTestPupilActor.generated.h"
 
 
@@ -36,5 +37,6 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 	FPupilMsgWorker* PupilComm;
-	void NewBeginPlay();
+	UFUNCTION(BlueprintCallable, Category = "Pupil Labs", meta = (Keywords = "Access Gaze Ray"))
+		FUEStruct PupilData();
 };
