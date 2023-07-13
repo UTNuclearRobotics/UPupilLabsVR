@@ -16,13 +16,19 @@ void AMyTestPupilActor::BeginPlay()
 	Super::BeginPlay();
 	UE_LOG(LogTemp, Warning, TEXT("PupilActor>>>>BeginPlay"));
 	//SPAWN PAWN
-	FVector SpawnLocation(300, 0, 100);
+	FVector SpawnLocation(1000, 1000, 1000);
 	FRotator SpawnRotation(0.0f, 0.0f, 0.0f);
 	FActorSpawnParameters SpawnParameters = FActorSpawnParameters();
-	AAPupilLabsVisualMarkersPawn* CalibrationScenePawn = GetWorld()->SpawnActor<AAPupilLabsVisualMarkersPawn>(AAPupilLabsVisualMarkersPawn::StaticClass(), SpawnLocation, SpawnRotation, SpawnParameters);
+	// AAPupilLabsVisualMarkersPawn* CalibrationScenePawn = GetWorld()->SpawnActor<AAPupilLabsVisualMarkersPawn>(AAPupilLabsVisualMarkersPawn::StaticClass(), SpawnLocation, SpawnRotation, SpawnParameters);
 	//SPAWN PAWN
+
+	ACalibrationMarker* CalibrationMarker = GetWorld()->SpawnActor<ACalibrationMarker>(ACalibrationMarker::StaticClass(), SpawnLocation, SpawnRotation, SpawnParameters);
+
 	PupilComm = FPupilMsgWorker::StartListening();
-	PupilComm->SetVisualsReference(CalibrationScenePawn);
+
+	PupilComm->SetCalibrationMarker(CalibrationMarker);
+
+	// PupilComm->SetVisualsReference(CalibrationScenePawn);
 	PupilComm->OnNewData().AddUObject(this, &AMyTestPupilActor::OnNewPupilData);
 	UE_LOG(LogTemp, Warning, TEXT("[%s][%d]"), TEXT(__FUNCTION__), __LINE__);
 }
@@ -58,7 +64,7 @@ void AMyTestPupilActor::PerformRaycast(UWorld* CurrentWorld)
 	float YGaze = ReceivedGazeStructure->base_data.pupil.norm_pos.y;
 	if (GEngine->GameViewport && GEngine->GameViewport->Viewport)
 	{
-		// const FVector2D ViewportSize = FVector2D(GEngine->GameViewport->Viewport->GetSizeXY());
+		/// const FVector2D ViewportSize = FVector2D(GEngine->GameViewport->Viewport->GetSizeXY());
 		FVector WorldLocation;
 		FVector WorldDirection;
 
@@ -98,6 +104,7 @@ void AMyTestPupilActor::PerformRaycast(UWorld* CurrentWorld)
 FUEStruct AMyTestPupilActor::PupilData()
 {
 	FUEStruct pupilStruct;
+	pupilStruct.id = ReceivedGazeStructure->id;
 	pupilStruct.eye_loc.X = ReceivedGazeStructure->eye_center_3d.x;	
 	pupilStruct.eye_loc.Y = ReceivedGazeStructure->eye_center_3d.y;
 	pupilStruct.eye_loc.Z = ReceivedGazeStructure->eye_center_3d.z;

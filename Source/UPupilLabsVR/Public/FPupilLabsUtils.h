@@ -8,6 +8,9 @@
 #include "zmq.hpp"
 #include "zmq_addon.hpp"
 #include "Engine/Engine.h"
+#include <Eigen/Dense>
+#include <vector>
+#include <cmath>
 /**
 * \MSGPACK_USE_CPP03 has been applied to use the CPP03 _t implementations instead of _type.
 *  Any usage of CPP011 calls from msgpack will not work.
@@ -19,6 +22,7 @@
 #include "msgpack.hpp"
 #include "GazeStruct.h"
 #include "APupilLabsVisualMarkersPawn.h"
+#include "CalibrationMarker.h"
 
 // 
 /**
@@ -40,6 +44,7 @@ public:
 	~FPupilLabsUtils();
 	/**Public Method accesible by the Worker Thread such that we can get the Gaze Structure Data*/
 	GazeStruct GetGazeStructure();
+	Eigen::Matrix4f transform;
 	/**Public Method To be called when we do not need to receive any data from pupil service*/
 	void CloseSubSocket();
 	///CALIBRATION METHODS///
@@ -56,7 +61,7 @@ public:
 	void StartCalibration(zmq::socket_t* socket);
 	void StopCalibration(zmq::socket_t* socket);
 
-	void InitializeCalibration(zmq::socket_t* ReqSocket);
+	void InitializeCalibration();
 
 	bool CanGaze();
 	void SetCalibrationSceneVisualReference(AAPupilLabsVisualMarkersPawn* CalibrationScenePawn);
@@ -75,6 +80,9 @@ public:
 	void SendMultiPartMessage(zmq::socket_t* ReqSocket, std::string FirstBuffer, msgpack::sbuffer SecondBuffer);
 	bool StartEyeProcesses();
 	void CloseEyeProcesses(zmq::socket_t* ReqSocket);
+
+	ACalibrationMarker* CalibrationMarker;
+	void SetCalibrationMarker(ACalibrationMarker* MarkerRef);
 
 	///END CALIBRATION METHODS///
 
@@ -97,6 +105,9 @@ private:
 	/**Helper Method that converts the binary message into a C structure using msgpack*/
 	 GazeStruct ConvertMsgPackToGazeStruct(zmq::message_t info);
 	 void SaveData(FString SaveText);
+	 void CustomCalibration();
+	 Eigen::Vector3f LeastSquares(std::vector<Eigen::Vector3f> lsaPoints, std::vector<Eigen::Vector3f> lsaLines);
+	 void TransformCalc(Eigen::Vector3f solution_point, std::vector<Eigen::Vector3f> headsetCalibrationPoints, std::vector<Eigen::Vector3f> gazeLines, std::vector<Eigen::Vector3f> eyePoints);
 	
 private:
 	int CalibrationElementIterator;

@@ -129,6 +129,12 @@ void FPupilMsgWorker::SetVisualsReference(AAPupilLabsVisualMarkersPawn * Calibra
 	PupilHelper.SetCalibrationSceneVisualReference(CalibrationScenePawn);
 }
 
+void FPupilMsgWorker::SetCalibrationMarker(ACalibrationMarker* MarkerRef)
+{
+	UE_LOG(LogTemp, Warning, TEXT("[%s][%d] : %s"), TEXT(__FUNCTION__), __LINE__, TEXT("Initializing Calibration"));
+	PupilHelper.SetCalibrationMarker(MarkerRef);
+}
+
 void OnNewData()
 {
 	

@@ -9,6 +9,7 @@
 #include "Engine/Engine.h"
 #include "FPupilMsgWorker.h"
 #include "UEStruct.h"
+#include "CalibrationMarker.h"
 #include "MyTestPupilActor.generated.h"
 
 

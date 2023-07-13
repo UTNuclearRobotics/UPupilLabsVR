@@ -13,6 +13,7 @@
 #include "Editor.h"
 #include "GameFramework/PlayerController.h"
 #include "FPupilLabsUtils.h"
+#include "CalibrationMarker.h"
 
 /**
  * Thread which connects and receive data from a certain @PupilTopic from Pupil Serice.
@@ -26,6 +27,7 @@ public:
 	/**Stops the Thread and ensures its completion before deleting it*/
 	void StopListening();
 	void SetVisualsReference(AAPupilLabsVisualMarkersPawn* CalibrationScenePawn);
+	void SetCalibrationMarker(ACalibrationMarker* MarkerRef);
 public:
 	DECLARE_EVENT_OneParam(FPupilMsgWorker, DummyEvent, GazeStruct*);
 	DummyEvent& OnNewData()  { return NewPupilDataEvent; }

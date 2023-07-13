@@ -1,13 +1,31 @@
 // Copyright 1998-2017 Epic Games, Inc. All Rights Reserved.
 
+using System.IO;
 using UnrealBuildTool;
 
 public class UPupilLabsVR : ModuleRules
 {
+
+	private string ThirdPartyPath
+	{
+		get { return Path.GetFullPath(Path.Combine(ModuleDirectory, "../ThirdParty/")); }
+	}
+
+	public void LoadEigen()
+	{
+		// Create Eigen Path 
+		string EigenPath = Path.Combine(ThirdPartyPath, "Eigen");
+
+		//Add Include path 
+		PublicIncludePaths.AddRange(new string[] { Path.Combine(EigenPath, "includes") });
+	}
+
 	public UPupilLabsVR(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
 		bEnableUndefinedIdentifierWarnings = false;
+
+		LoadEigen();
 
 		PublicIncludePaths.AddRange(
 			new string[] {
