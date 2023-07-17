@@ -28,6 +28,7 @@ public:
 	void StopListening();
 	void SetVisualsReference(AAPupilLabsVisualMarkersPawn* CalibrationScenePawn);
 	void SetCalibrationMarker(ACalibrationMarker* MarkerRef);
+	void UpdateCalibration();
 public:
 	DECLARE_EVENT_OneParam(FPupilMsgWorker, DummyEvent, GazeStruct*);
 	DummyEvent& OnNewData()  { return NewPupilDataEvent; }

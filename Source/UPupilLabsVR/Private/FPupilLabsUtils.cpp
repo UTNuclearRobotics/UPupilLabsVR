@@ -152,11 +152,6 @@ GazeStruct FPupilLabsUtils::GetGazeStructure()
 	zmq::message_t info;
 	SubSocket->recv(&info);
 	GazeStruct ReceivedGazeStruct = ConvertMsgPackToGazeStruct(std::move(info));
-	if (bCalibrationStarted && !bCalibrationEnded)
-	{
-		// add to data?
-	}
-
 	return ReceivedGazeStruct;
 }
 
@@ -170,7 +165,7 @@ void FPupilLabsUtils::InitializeCalibration()
 	PreviousCalibrationDepth = -1;
 	PreviousCalibrationPoint = -1;
 	CalibrationElementIterator = 0;
-	bCalibrationStarted = false;
+	bCalibrationStarted = true;
 	bCalibrationEnded = false;
 	CustomCalibration();
 	//CREATE FIRST MARKER
@@ -556,74 +551,23 @@ void FPupilLabsUtils::SaveData(FString SaveText)
 
 void FPupilLabsUtils::CustomCalibration()
 {
-	std::vector<FVector> CalibrationLocations;
-	CalibrationLocations.push_back(FVector(0, 100, 0));
-	CalibrationLocations.push_back(FVector(100, 100, 100));
-	CalibrationLocations.push_back(FVector(-100, 100, 100));
-	CalibrationLocations.push_back(FVector(100, 100, -100));
-	CalibrationLocations.push_back(FVector(-100, 100, -100));
+	CalibrationLocations.push_back(FVector(120, 0, 0));
+	CalibrationLocations.push_back(FVector(120, 20, 20));
+	CalibrationLocations.push_back(FVector(120, -20, 20));
+	CalibrationLocations.push_back(FVector(120, 20, -20));
+	CalibrationLocations.push_back(FVector(120, -20, -20));
 
-	std::vector<Eigen::Vector3f> calibrationLocationHeadsetFrame;
-	std::vector<Eigen::Vector3f> gazeDir;
-	std::vector<Eigen::Vector3f> eyeLoc;
 
 	// place initial calibration point
-	int calPoints = 0;
+	calPoints = 0;
+	IgnoreSamples = 0;
 	CalibrationMarker->SetActorLocation(CalibrationLocations[calPoints]);
-	bool bCalibrationProgressing = true;
-	while (bCalibrationProgressing)
-	{
-		if (CurrentCalibrationSamples > SamplesToIgnoreForEyeMovement)
-		{
-			GazeStruct GazeData = GetGazeStructure();
-			if (GazeData.base_data.pupil.id == 0) // for one eye currently //&& GazeData.confidence>0.6
-			{
-				gazeDir.push_back(Eigen::Vector3f(GazeData.gaze_normal_3d.x, GazeData.gaze_normal_3d.y, GazeData.gaze_normal_3d.z));
-				eyeLoc.push_back(Eigen::Vector3f(GazeData.eye_center_3d.x, GazeData.eye_center_3d.y, GazeData.eye_center_3d.z));
-				calibrationLocationHeadsetFrame.push_back(Eigen::Vector3f(CalibrationLocations[calPoints][0], CalibrationLocations[calPoints][1], CalibrationLocations[calPoints][2]));
-			}
-		}
-
-        CurrentCalibrationSamples++;//Increment the current calibration sample. (Default sample amount per calibration point is 120)
-        
-		if (size(gazeDir) >= CurrentCalibrationSamplesPerDepth)
-        {
-            CurrentCalibrationSamples = 0;
-            calPoints++;
-			CalibrationMarker->SetActorLocation(CalibrationLocations[calPoints]);
-        }
-
-		if (calPoints > 4)
-		{
-			bCalibrationProgressing = false;
-		}
-	}
-
-	Eigen::Vector3f eye_loc = LeastSquares(calibrationLocationHeadsetFrame, gazeDir);
-
-	TransformCalc(eye_loc, calibrationLocationHeadsetFrame, gazeDir, eyeLoc);
-
-	UE_LOG(LogTemp, Warning, TEXT("[%s][%d] : %s"), TEXT(__FUNCTION__), __LINE__, TEXT("CalCal"));
-	bCalibrationEnded = true;
+	bCalibrationProgressing = true;
 }
 
 
 Eigen::Vector3f FPupilLabsUtils::LeastSquares(std::vector<Eigen::Vector3f> lsaPoints, std::vector<Eigen::Vector3f> lsaLines)
 {
-	// create test points
-	Eigen::Vector3f point_1(1, 2, 3);
-	Eigen::Vector3f point_2(5, 0, 1);
-	Eigen::Vector3f line_1(1, -1, 0);
-	line_1.normalize();
-	Eigen::Vector3f line_2(-1, 0, 1);
-	line_2.normalize();
-
-	lsaPoints.push_back(point_1);
-	lsaPoints.push_back(point_2);
-
-	lsaLines.push_back(line_1);
-	lsaLines.push_back(line_2);
-
 	// perform LSA
 	Eigen::Matrix3f identityMat;
 	identityMat.setIdentity();
@@ -632,17 +576,24 @@ Eigen::Vector3f FPupilLabsUtils::LeastSquares(std::vector<Eigen::Vector3f> lsaPo
 	R.setZero();
 
 	Eigen::Vector3f q(0, 0, 0);
+	// UE_LOG(LogTemp, Warning, TEXT("%s %d %s"), q(0), q(1), q(2));
 
 	for (int i = 0; i < size(lsaPoints); i++)
 	{
+		lsaLines[i] = -1*lsaLines[i];
+		lsaLines[i].normalize();
 		R += identityMat - lsaLines[i] * lsaLines[i].transpose();
 		q += (identityMat - lsaLines[i] * lsaLines[i].transpose()) * lsaPoints[i];
 	}
 
 	Eigen::Matrix3f R_pseudo = (R.transpose() * R).inverse() * R.transpose();
 	Eigen::Vector3f solution_point = R_pseudo * q;
+	UE_LOG(LogTemp, Warning, TEXT("[%s][%d] : %s"), TEXT(__FUNCTION__), __LINE__, TEXT("Print Sol"));
+
+	UE_LOG(LogTemp, Warning, TEXT("Result is %s"), *FVector(solution_point(0),solution_point(1),solution_point(2)).ToString()); // DO NOT DELETE (SAVE FOR REFERENCE)
 	return solution_point;
 }
+
 
 void FPupilLabsUtils::TransformCalc(Eigen::Vector3f solution_point, std::vector<Eigen::Vector3f> headsetCalibrationPoints, std::vector<Eigen::Vector3f> gazeLines, std::vector<Eigen::Vector3f> eyePoints)
 {
@@ -659,7 +610,7 @@ void FPupilLabsUtils::TransformCalc(Eigen::Vector3f solution_point, std::vector<
 
 	for (int i = 0; i < size(eyePoints); i++)
 	{
-		cameraPoints.col(i) = gazeCalibrationPoints[i];
+		cameraPoints.col(i) = gazeCalibrationPoints[i]; // todo need to add ones
 		headsetPoints.col(i) = headsetCalibrationPoints[i];
 	}
 
@@ -667,11 +618,61 @@ void FPupilLabsUtils::TransformCalc(Eigen::Vector3f solution_point, std::vector<
 	cameraPseudo = cameraPoints.transpose() * (cameraPoints * cameraPoints.transpose()).inverse();
 
 	transform = headsetPoints * cameraPseudo;
+	// UE_LOG(LogTemp, Warning, TEXT("[%s][%d] : %s"), TEXT(__FUNCTION__), __LINE__, TEXT("Print transform"));
+	// UE_LOG(LogTemp, Warning, TEXT("Result is %s"), transform);
 }
 
 void FPupilLabsUtils::SetCalibrationMarker(ACalibrationMarker* MarkerRef)
 {
 	UE_LOG(LogTemp, Warning, TEXT("[%s][%d] : %s"), TEXT(__FUNCTION__), __LINE__, TEXT("Initializing Calibration"));
 	CalibrationMarker = MarkerRef;
+	// CalibrationMarker->SetActorLocation(FVector(0, 100, 0));
 	InitializeCalibration();
+}
+
+void FPupilLabsUtils::UpdateCustomCalibration()
+{
+	if (bCalibrationProgressing)
+	{
+		if (IgnoreSamples > SamplesToIgnoreForEyeMovement)
+		{
+			GazeStruct GazeData = GetGazeStructure();
+			if (GazeData.base_data.pupil.id == 0 && GazeData.confidence > 0.6) // for one eye currently //&& GazeData.confidence>0.6
+			{
+				//if (GazeData.confidence < 0.6)
+				//{
+				//	gazeDir.push_back(Eigen::Vector3f(0, 0, 0));
+				//	eyeLoc.push_back(Eigen::Vector3f(0, 0, 0));
+				//	calibrationLocationHeadsetFrame.push_back(Eigen::Vector3f(CalibrationLocations[calPoints][0], CalibrationLocations[calPoints][1], CalibrationLocations[calPoints][2]));
+
+				//}
+				gazeDir.push_back(Eigen::Vector3f(GazeData.gaze_normal_3d.x, GazeData.gaze_normal_3d.y, GazeData.gaze_normal_3d.z));
+				eyeLoc.push_back(Eigen::Vector3f(GazeData.eye_center_3d.x, GazeData.eye_center_3d.y, GazeData.eye_center_3d.z));
+				calibrationLocationHeadsetFrame.push_back(Eigen::Vector3f(CalibrationLocations[calPoints][0], CalibrationLocations[calPoints][1], CalibrationLocations[calPoints][2]));
+				CurrentCalibrationSamples++;//Increment the current calibration sample. (Default sample amount per calibration point is 120)
+			}
+		}
+
+		IgnoreSamples++;//Increment the current calibration sample. (Default sample amount per calibration point is 120)
+
+		if (CurrentCalibrationSamples >= CurrentCalibrationSamplesPerDepth)
+		{
+			CurrentCalibrationSamples = 0;
+			IgnoreSamples = 0;
+			calPoints++;
+			CalibrationMarker->SetActorLocation(CalibrationLocations[calPoints]);
+			UE_LOG(LogTemp, Warning, TEXT("[%s][%d] : %s"), TEXT(__FUNCTION__), __LINE__, TEXT("MoveCalActor"));
+		}
+
+		if (calPoints > 4)
+		{
+			bCalibrationProgressing = false;
+			Eigen::Vector3f eye_loc = LeastSquares(calibrationLocationHeadsetFrame, gazeDir);
+
+			TransformCalc(eye_loc, calibrationLocationHeadsetFrame, gazeDir, eyeLoc);
+
+			UE_LOG(LogTemp, Warning, TEXT("[%s][%d] : %s"), TEXT(__FUNCTION__), __LINE__, TEXT("CalCal"));
+			bCalibrationEnded = true;
+		}
+	}
 }

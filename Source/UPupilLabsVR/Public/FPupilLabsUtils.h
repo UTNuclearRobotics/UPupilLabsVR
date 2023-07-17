@@ -85,6 +85,7 @@ public:
 	void SetCalibrationMarker(ACalibrationMarker* MarkerRef);
 
 	///END CALIBRATION METHODS///
+	void UpdateCustomCalibration();
 
 
 private:
@@ -142,6 +143,13 @@ private:
 	/**Subsocket on which the Zmq Request Socket Subscribes*/
 	zmq::socket_t *SubSocket;
 	bool bSubSocketClosed;
+	std::vector<Eigen::Vector3f> calibrationLocationHeadsetFrame;
+	std::vector<Eigen::Vector3f> gazeDir;
+	std::vector<Eigen::Vector3f> eyeLoc;
+	int calPoints;
+	int IgnoreSamples;
+	bool bCalibrationProgressing;
+	std::vector<FVector> CalibrationLocations;
 
 	/**Begin Hardcoded strings that define the connection and type of Subscription */
 	std::string Addr = "tcp://127.0.0.1:";//TODO UPROPERTY Options

@@ -36,7 +36,7 @@ void AMyTestPupilActor::BeginPlay()
 void AMyTestPupilActor::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	// UE_LOG(LogTemp, Warning, TEXT("PupilActor>>Tick"));
+	PupilComm->UpdateCalibration();
 }
 
 void AMyTestPupilActor::OnNewPupilData(GazeStruct* GazeStructure)

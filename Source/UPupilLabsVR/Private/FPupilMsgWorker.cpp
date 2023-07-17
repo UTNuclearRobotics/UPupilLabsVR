@@ -139,3 +139,8 @@ void OnNewData()
 {
 	
 }
+
+void FPupilMsgWorker::UpdateCalibration()
+{
+	PupilHelper.UpdateCustomCalibration();
+}
