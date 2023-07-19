@@ -11,6 +11,7 @@
 #include <Eigen/Dense>
 #include <vector>
 #include <cmath>
+#include "IXRTrackingSystem.h"
 /**
 * \MSGPACK_USE_CPP03 has been applied to use the CPP03 _t implementations instead of _type.
 *  Any usage of CPP011 calls from msgpack will not work.
@@ -127,7 +128,7 @@ private:
 	 float Radius;
 	 const float TimeBetweenCalibrationPoints = 0.02f;
 	 const int CalibrationType2DPointsNumber = 8;
-	 const int CurrentCalibrationSamplesPerDepth = 120;
+	 const int CurrentCalibrationSamplesPerDepth = 240;
 	 const int CurrentCalibrationTypeVectorDepthRadiusLength = 2;
 	 int CurrentCalibrationPoint;
 	 int CurrentCalibrationDepth;
@@ -143,9 +144,12 @@ private:
 	/**Subsocket on which the Zmq Request Socket Subscribes*/
 	zmq::socket_t *SubSocket;
 	bool bSubSocketClosed;
-	std::vector<Eigen::Vector3f> calibrationLocationHeadsetFrame;
-	std::vector<Eigen::Vector3f> gazeDir;
-	std::vector<Eigen::Vector3f> eyeLoc;
+	std::vector<Eigen::Vector3f> calibrationLocationHeadsetFrame_right;
+	std::vector<Eigen::Vector3f> calibrationLocationHeadsetFrame_left;
+	std::vector<Eigen::Vector3f> gazeDir_right;
+	std::vector<Eigen::Vector3f> eyeLoc_right;
+	std::vector<Eigen::Vector3f> gazeDir_left;
+	std::vector<Eigen::Vector3f> eyeLoc_left;
 	int calPoints;
 	int IgnoreSamples;
 	bool bCalibrationProgressing;
