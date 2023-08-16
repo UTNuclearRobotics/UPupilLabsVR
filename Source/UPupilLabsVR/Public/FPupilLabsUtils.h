@@ -83,7 +83,7 @@ public:
 	void CloseEyeProcesses(zmq::socket_t* ReqSocket);
 
 	ACalibrationMarker* CalibrationMarker;
-	void SetCalibrationMarker(ACalibrationMarker* MarkerRef);
+	void SetCalibrationMarker(ACalibrationMarker* MarkerRef, UWorld* World);
 
 	///END CALIBRATION METHODS///
 	void UpdateCustomCalibration();
@@ -108,7 +108,8 @@ private:
 	 GazeStruct ConvertMsgPackToGazeStruct(zmq::message_t info);
 	 void SaveData(FString SaveText);
 	 void CustomCalibration();
-	 Eigen::Vector3f LeastSquares(std::vector<Eigen::Vector3f> lsaPoints, std::vector<Eigen::Vector3f> lsaLines);
+	 Eigen::Matrix3f Wahba(std::vector<Eigen::Vector3f> eyeLines, std::vector<Eigen::Vector3f> headLines);
+	 Eigen::Vector3f LeastSquares(std::vector<Eigen::Vector3f> lsaPoints, std::vector<Eigen::Vector3f> lsaLines, Eigen::Matrix3f Rotation);
 	 void TransformCalc(Eigen::Vector3f solution_point, std::vector<Eigen::Vector3f> headsetCalibrationPoints, std::vector<Eigen::Vector3f> gazeLines, std::vector<Eigen::Vector3f> eyePoints);
 	
 private:
@@ -128,7 +129,7 @@ private:
 	 float Radius;
 	 const float TimeBetweenCalibrationPoints = 0.02f;
 	 const int CalibrationType2DPointsNumber = 8;
-	 const int CurrentCalibrationSamplesPerDepth = 240;
+	 const int CurrentCalibrationSamplesPerDepth = 120;
 	 const int CurrentCalibrationTypeVectorDepthRadiusLength = 2;
 	 int CurrentCalibrationPoint;
 	 int CurrentCalibrationDepth;
@@ -145,6 +146,7 @@ private:
 	zmq::socket_t *SubSocket;
 	bool bSubSocketClosed;
 	std::vector<Eigen::Vector3f> calibrationLocationHeadsetFrame_right;
+	std::vector<Eigen::Vector3f> calibrationDirectionHeadsetFrame_right;
 	std::vector<Eigen::Vector3f> calibrationLocationHeadsetFrame_left;
 	std::vector<Eigen::Vector3f> gazeDir_right;
 	std::vector<Eigen::Vector3f> eyeLoc_right;
@@ -154,6 +156,7 @@ private:
 	int IgnoreSamples;
 	bool bCalibrationProgressing;
 	std::vector<FVector> CalibrationLocations;
+	UWorld* WorldRef;
 
 	/**Begin Hardcoded strings that define the connection and type of Subscription */
 	std::string Addr = "tcp://127.0.0.1:";//TODO UPROPERTY Options
