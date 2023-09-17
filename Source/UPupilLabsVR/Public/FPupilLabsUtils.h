@@ -88,6 +88,13 @@ public:
 	///END CALIBRATION METHODS///
 	void UpdateCustomCalibration();
 
+	Eigen::Matrix3f Rotation;
+	Eigen::Matrix3f Rotation_l;
+	Eigen::Vector3f eye_loc_right;
+	Eigen::Vector3f eye_loc_left;
+	Eigen::Matrix3f GetRotation();
+	Eigen::Vector3f GetLocation();
+
 
 private:
 	///CALIBRATION METHODS
@@ -109,7 +116,7 @@ private:
 	 void SaveData(FString SaveText);
 	 void CustomCalibration();
 	 Eigen::Matrix3f Wahba(std::vector<Eigen::Vector3f> eyeLines, std::vector<Eigen::Vector3f> headLines);
-	 Eigen::Vector3f LeastSquares(std::vector<Eigen::Vector3f> lsaPoints, std::vector<Eigen::Vector3f> lsaLines, Eigen::Matrix3f Rotation);
+	 Eigen::Vector3f LeastSquares(std::vector<Eigen::Vector3f> lsaPoints, std::vector<Eigen::Vector3f> lsaLines, Eigen::Matrix3f Rotation_Mat);
 	 void TransformCalc(Eigen::Vector3f solution_point, std::vector<Eigen::Vector3f> headsetCalibrationPoints, std::vector<Eigen::Vector3f> gazeLines, std::vector<Eigen::Vector3f> eyePoints);
 	
 private:
@@ -129,7 +136,7 @@ private:
 	 float Radius;
 	 const float TimeBetweenCalibrationPoints = 0.02f;
 	 const int CalibrationType2DPointsNumber = 8;
-	 const int CurrentCalibrationSamplesPerDepth = 120;
+	 const int CurrentCalibrationSamplesPerDepth = 240;
 	 const int CurrentCalibrationTypeVectorDepthRadiusLength = 2;
 	 int CurrentCalibrationPoint;
 	 int CurrentCalibrationDepth;

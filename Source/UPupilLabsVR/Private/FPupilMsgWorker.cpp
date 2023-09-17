@@ -50,6 +50,8 @@ uint32 FPupilMsgWorker::Run()
 		FPlatformProcess::Sleep(0.32);
 		if(PupilHelper.CanGaze()){
 		ReceivedGazeStructure = PupilHelper.GetGazeStructure();
+		Rotation = PupilHelper.GetRotation();
+		Location = PupilHelper.GetLocation();
 		double Confidence = ReceivedGazeStructure.base_data.pupil.confidence;
 		//If Confidence bigger than 60 % send delegate
 		GazeStruct ReceivedGazeStruct;
@@ -143,4 +145,14 @@ void OnNewData()
 void FPupilMsgWorker::UpdateCalibration()
 {
 	PupilHelper.UpdateCustomCalibration();
+}
+
+Eigen::Matrix3f FPupilMsgWorker::GetRotation()
+{
+	return Rotation;
+}
+
+Eigen::Vector3f FPupilMsgWorker::GetLocation()
+{
+	return Location;
 }

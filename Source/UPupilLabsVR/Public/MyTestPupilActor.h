@@ -33,6 +33,8 @@ protected:
 	//Received Data From The Worker's Event
 	GazeStruct* ReceivedGazeStructure;
 	///--END RAYCAST--///
+	UWorld* World;
+	bool canRayCast = false;
 
 public:
 	// Called every frame

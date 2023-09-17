@@ -29,6 +29,10 @@ public:
 	void SetVisualsReference(AAPupilLabsVisualMarkersPawn* CalibrationScenePawn);
 	void SetCalibrationMarker(ACalibrationMarker* MarkerRef, UWorld* World);
 	void UpdateCalibration();
+	Eigen::Matrix3f Rotation;
+	Eigen::Vector3f Location;
+	Eigen::Matrix3f GetRotation();
+	Eigen::Vector3f GetLocation();
 public:
 	DECLARE_EVENT_OneParam(FPupilMsgWorker, DummyEvent, GazeStruct*);
 	DummyEvent& OnNewData()  { return NewPupilDataEvent; }
