@@ -10,7 +10,10 @@
 #include "FPupilMsgWorker.h"
 #include "UEStruct.h"
 #include "CalibrationMarker.h"
+#include "DrawDebugHelpers.h"
+#include "Kismet/KismetSystemLibrary.h"
 #include "MyTestPupilActor.generated.h"
+
 
 
 UCLASS()

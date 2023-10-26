@@ -39,7 +39,7 @@ void AMyTestPupilActor::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	PupilComm->UpdateCalibration();
-	PerformRaycast(World);
+	// PerformRaycast(World);
 }
 
 void AMyTestPupilActor::OnNewPupilData(GazeStruct* GazeStructure)
@@ -61,21 +61,25 @@ void AMyTestPupilActor::PerformRaycast(UWorld* CurrentWorld)
 	{
 		if (ReceivedGazeStructure->confidence > 0.6 && ReceivedGazeStructure->topic == "gaze.3d.01.")
 		{
-			APlayerCameraManager* camManager = CurrentWorld->GetFirstPlayerController()->PlayerCameraManager;
-			FVector HMDposition = camManager->GetCameraLocation();
-			FRotator HMDorientation = camManager->GetCameraRotation();
-			Eigen::Matrix3f Rotation = PupilComm->GetRotation();
-			Eigen::Vector3f Location = PupilComm->GetLocation();
-			FVector TraceStart = FVector(Location.x(), Location.y(), Location.z()) + HMDposition;
-			// FVector TraceStart = HMDposition;
-			Eigen::Vector3f TraceVec = Rotation * Eigen::Vector3f(ReceivedGazeStructure->gaze_normals_3d.begin()->second.x, ReceivedGazeStructure->gaze_normals_3d.begin()->second.y, ReceivedGazeStructure->gaze_normals_3d.begin()->second.z);
-			FVector TraceDir = FVector(TraceVec.x(), TraceVec.y(), TraceVec.z());
-			UE_LOG(LogTemp, Warning, TEXT("tracedir is %s"), *TraceDir.ToString());
-			FVector TraceEnd = TraceStart + 50 * HMDorientation.RotateVector(TraceDir);
-			UE_LOG(LogTemp, Warning, TEXT("tracedir is %s"), *HMDorientation.RotateVector(TraceDir).ToString());
-			FHitResult* HitResult = new FHitResult(ForceInit);
-			FCollisionQueryParams* TraceParams = new FCollisionQueryParams();
-			DrawDebugLine(GetWorld(), TraceStart, TraceEnd, FColor(238, 0, 238), false, 0.1);
+			if (ReceivedGazeStructure->gaze_normals_3d.begin()->first == "0")
+			{
+				APlayerCameraManager* camManager = CurrentWorld->GetFirstPlayerController()->PlayerCameraManager;
+				FVector HMDposition = camManager->GetCameraLocation();
+				FRotator HMDorientation = camManager->GetCameraRotation();
+				Eigen::Matrix3f Rotation = PupilComm->GetRotation();
+				Eigen::Vector3f Location = PupilComm->GetLocation();
+				FVector TraceStart = FVector(Location.x(), Location.y(), Location.z()) + HMDposition;
+				TraceStart = HMDposition;
+				Eigen::Vector3f TraceVec = Rotation * Eigen::Vector3f(ReceivedGazeStructure->gaze_normals_3d.begin()->second.x, ReceivedGazeStructure->gaze_normals_3d.begin()->second.y, ReceivedGazeStructure->gaze_normals_3d.begin()->second.z).normalized();
+				FVector TraceDir = FVector(TraceVec.x(), -TraceVec.y(), TraceVec.z());
+				// UE_LOG(LogTemp, Warning, TEXT("tracedir is %s"), *TraceDir.ToString());
+				// FVector TraceEnd = TraceStart + 50 * HMDorientation.RotateVector(TraceDir);
+				FVector TraceEnd = TraceStart + 1 * HMDorientation.Vector();
+				UE_LOG(LogTemp, Warning, TEXT("tracedir is %s"), *HMDorientation.RotateVector(TraceDir).ToString());
+				FHitResult* HitResult = new FHitResult(ForceInit);
+				FCollisionQueryParams* TraceParams = new FCollisionQueryParams();
+				DrawDebugLine(CurrentWorld, TraceStart, TraceEnd, FColor(255, 0, 0), true, 0.3, 255, 10.0);
+			}
 		}
 	}
 
@@ -101,15 +105,28 @@ void AMyTestPupilActor::PerformRaycast(UWorld* CurrentWorld)
 
 FUEStruct AMyTestPupilActor::PupilData()
 {
+	Eigen::Vector3f Location = PupilComm->GetLocation();
+	Eigen::Matrix3f Rotation = PupilComm->GetRotation();
+	Eigen::Quaternionf q(Rotation);
+	FRotator UERot = FRotator(FQuat(q.x(), q.y(), q.z(), q.w()));
 	FUEStruct pupilStruct;
-//	pupilStruct.id = ReceivedGazeStructure->id;
-//	pupilStruct.eye_loc.X = ReceivedGazeStructure->eye_center_3d.x;	
-//	pupilStruct.eye_loc.Y = ReceivedGazeStructure->eye_center_3d.y;
-//	pupilStruct.eye_loc.Z = ReceivedGazeStructure->eye_center_3d.z;
-//
-//	pupilStruct.gaze_dir.X = ReceivedGazeStructure->gaze_normal_3d.x;
-//	pupilStruct.gaze_dir.Y = ReceivedGazeStructure->gaze_normal_3d.y;
-//	pupilStruct.gaze_dir.Z = ReceivedGazeStructure->gaze_normal_3d.z;
+	if (canRayCast)
+	{
+		if (ReceivedGazeStructure->confidence > 0.6 && ReceivedGazeStructure->topic == "gaze.3d.01.")
+		{
+			if (ReceivedGazeStructure->gaze_normals_3d.begin()->first == "0")
+			{
+				pupilStruct.eye_loc.X = Location.x();
+				pupilStruct.eye_loc.Y = Location.y();
+				pupilStruct.eye_loc.Z = Location.z();
+				pupilStruct.gaze_dir.X = ReceivedGazeStructure->gaze_normals_3d.begin()->second.x;
+				pupilStruct.gaze_dir.Y = -ReceivedGazeStructure->gaze_normals_3d.begin()->second.y;
+				pupilStruct.gaze_dir.Z = ReceivedGazeStructure->gaze_normals_3d.begin()->second.z;
+				pupilStruct.gaze_rot = UERot;
+			}
+
+		}
+	}
 //
 	return pupilStruct;
 }

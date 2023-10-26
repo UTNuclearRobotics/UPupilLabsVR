@@ -97,7 +97,7 @@ GazeStruct FPupilLabsUtils::ConvertMsgPackToGazeStruct(zmq::message_t info)
 	std::string demo = ss.str();
 	deserialized.convert(ReceivedGazeStruct);
 	FString SaveText = UTF8_TO_TCHAR(demo.c_str());
-	SaveData(SaveText);
+	// SaveData(SaveText);
 	return ReceivedGazeStruct;
 }
 
@@ -577,8 +577,8 @@ Eigen::Matrix3f FPupilLabsUtils::Wahba(std::vector<Eigen::Vector3f> eyeLines, st
 	for (int i = 0; i < size(eyeLines); i++)
 	{
 		B += eyeLines[i] * headLines[i].transpose();
-		// UE_LOG(LogTemp, Warning, TEXT("eyeLines is %s"), *FVector(eyeLines[i](0), eyeLines[i](1), eyeLines[i](2)).ToString());
-		// UE_LOG(LogTemp, Warning, TEXT("headLines is %s"), *FVector(headLines[i](0), headLines[i](1), headLines[i](2)).ToString());
+		UE_LOG(LogTemp, Warning, TEXT("eyeLines is %s"), *FVector(eyeLines[i](0), eyeLines[i](1), eyeLines[i](2)).ToString());
+		UE_LOG(LogTemp, Warning, TEXT("headLines is %s"), *FVector(headLines[i](0), headLines[i](1), headLines[i](2)).ToString());
 	}
 	Eigen::JacobiSVD<Eigen::Matrix3f> svd(B, Eigen::ComputeFullU | Eigen::ComputeFullV);
 	auto U = svd.matrixU();
@@ -686,9 +686,14 @@ void FPupilLabsUtils::UpdateCustomCalibration()
 			{
                 APlayerCameraManager* camManager = WorldRef->GetFirstPlayerController()->PlayerCameraManager;
                 FVector HMDposition = camManager->GetCameraLocation();
+				FVector eye_offset_right_ue(-4, 3.15, -1.5);
                 FQuat HMDorientation = camManager->GetCameraRotation().Quaternion();
-                FTransform HMDTransform = FTransform(HMDorientation, HMDposition);
+                FTransform HMDTransform = FTransform(HMDorientation, HMDposition+eye_offset_right_ue);
                 static const FQuat Identity;
+				Eigen::Vector3f e_l(-4, -3.15, -1.5);
+				Eigen::Vector3f e_r(-4, 3.15, -1.5);
+				eye_loc_left = e_l;
+				eye_loc_right = e_r;
                 FTransform CalTransform = FTransform(Identity, CalibrationLocations[calPoints]);
                 FTransform CaltoHMD = UKismetMathLibrary::MakeRelativeTransform(CalTransform, HMDTransform);
 				std::map<std::string, vector_3d> gaze_normals_3d = GazeData.gaze_normals_3d;
@@ -698,17 +703,17 @@ void FPupilLabsUtils::UpdateCustomCalibration()
 					vector_3d eye_vec = it->second;
 					if (it->first == "0")
 					{
-						gazeDir_right.push_back(Eigen::Vector3f(it->second.x, it->second.y, it->second.z).normalized());
+						gazeDir_right.push_back(Eigen::Vector3f(it->second.x, -it->second.y, it->second.z).normalized());
 					}
 					else if (it->first == "1")
 					{
-						gazeDir_left.push_back(Eigen::Vector3f(it->second.x, it->second.y, it->second.z).normalized());
+						gazeDir_left.push_back(Eigen::Vector3f(it->second.x, -it->second.y, it->second.z).normalized());
 					}
 				}
                 // eyeLoc_right.push_back(Eigen::Vector3f(GazeData.eye_center_3d.x * 10, GazeData.eye_center_3d.y * 10, GazeData.eye_center_3d.z * 10));
                 calibrationLocationHeadsetFrame_right.push_back(Eigen::Vector3f(CaltoHMD.GetLocation()[0], CaltoHMD.GetLocation()[1], CaltoHMD.GetLocation()[2]));
-                calibrationDirectionHeadsetFrame_right.push_back(Eigen::Vector3f(CaltoHMD.GetLocation()[0] - HMDposition[0], CaltoHMD.GetLocation()[1] - HMDposition[1], CaltoHMD.GetLocation()[2] - HMDposition[2]).normalized());
-                CurrentCalibrationSamples++;//Increment the current calibration sample. (Default sample amount per calibration point is 120)
+                calibrationDirectionHeadsetFrame_right.push_back(Eigen::Vector3f(CaltoHMD.GetLocation()[0] - (HMDposition[0] + eye_loc_right[0]), (CaltoHMD.GetLocation()[1] - (HMDposition[1] + eye_loc_right[1])), CaltoHMD.GetLocation()[2] - (HMDposition[2] + eye_loc_right[2])).normalized());
+				CurrentCalibrationSamples++;//Increment the current calibration sample. (Default sample amount per calibration point is 120)
 			}
 			IgnoreSamples++;//Increment the current calibration sample. (Default sample amount per calibration point is 120)
 		}
@@ -726,14 +731,72 @@ void FPupilLabsUtils::UpdateCustomCalibration()
 		{
 			bCalibrationProgressing = false;
 			Rotation = Wahba(gazeDir_right, calibrationDirectionHeadsetFrame_right);
-			Rotation_l = Wahba(gazeDir_left, calibrationDirectionHeadsetFrame_right);
-			eye_loc_right = LeastSquares(calibrationLocationHeadsetFrame_right, gazeDir_right, Rotation);
-			eye_loc_left = LeastSquares(calibrationLocationHeadsetFrame_right, gazeDir_left, Rotation_l);
+			// Eigen::Matrix3f R_test;
+			// R_test << 0, 0, 1, 1, 0, 0, 0, 1, 0;
+			// Rotation_l = Wahba(gazeDir_left, calibrationDirectionHeadsetFrame_right);
+			// eye_loc_right = LeastSquares(calibrationLocationHeadsetFrame_right, gazeDir_right, Rotation);
+			// eye_loc_left = LeastSquares(calibrationLocationHeadsetFrame_right, gazeDir_left, Rotation_l);
 			// Eigen::Vector3f eye_loc_right = LeastSquares(calibrationLocationHeadsetFrame_right, gazeDir_right);
 			// Eigen::Vector3f eye_loc_left = LeastSquares(calibrationLocationHeadsetFrame_left, gazeDir_left);
 			// calibrationLocationHeadsetFrame_right.insert(calibrationLocationHeadsetFrame_right.end(), calibrationLocationHeadsetFrame_left.begin(), calibrationLocationHeadsetFrame_left.end());
 			// TransformCalc(eye_loc_right, calibrationLocationHeadsetFrame_right, gazeDir_right, eyeLoc_right);
 			// TransformCalc(eye_loc_left, calibrationLocationHeadsetFrame_left, gazeDir_left, eyeLoc_left);
+			/*for (int i = 0; i < size(gazeDir_right); i++)
+			{
+				FString SaveText = UTF8_TO_TCHAR(std::to_string(gazeDir_right[i](0)).c_str());
+				SaveData(SaveText);
+				SaveText = ",";
+				SaveData(SaveText);
+				SaveText = UTF8_TO_TCHAR(std::to_string(gazeDir_right[i](1)).c_str());
+				SaveData(SaveText);
+				SaveText = ",";
+				SaveData(SaveText);
+				SaveText = UTF8_TO_TCHAR(std::to_string(gazeDir_right[i](2)).c_str());
+				SaveData(SaveText);
+				SaveText = ",";
+				SaveData(SaveText);
+
+				SaveText = UTF8_TO_TCHAR(std::to_string(gazeDir_left[i](0)).c_str());
+				SaveData(SaveText);
+				SaveText = ",";
+				SaveData(SaveText);
+				SaveText = UTF8_TO_TCHAR(std::to_string(gazeDir_left[i](1)).c_str());
+				SaveData(SaveText);
+				SaveText = ",";
+				SaveData(SaveText);
+				SaveText = UTF8_TO_TCHAR(std::to_string(gazeDir_left[i](2)).c_str());
+				SaveData(SaveText);
+				SaveText = ",";
+				SaveData(SaveText);
+
+				SaveText = UTF8_TO_TCHAR(std::to_string(calibrationLocationHeadsetFrame_right[i](0)).c_str());
+				SaveData(SaveText);
+				SaveText = ",";
+				SaveData(SaveText);
+				SaveText = UTF8_TO_TCHAR(std::to_string(calibrationLocationHeadsetFrame_right[i](1)).c_str());
+				SaveData(SaveText);
+				SaveText = ",";
+				SaveData(SaveText);
+				SaveText = UTF8_TO_TCHAR(std::to_string(calibrationLocationHeadsetFrame_right[i](2)).c_str());
+				SaveData(SaveText);
+				SaveText = ",";
+				SaveData(SaveText);
+
+				SaveText = UTF8_TO_TCHAR(std::to_string(calibrationDirectionHeadsetFrame_right[i](0)).c_str());
+				SaveData(SaveText);
+				SaveText = ",";
+				SaveData(SaveText);
+				SaveText = UTF8_TO_TCHAR(std::to_string(calibrationDirectionHeadsetFrame_right[i](1)).c_str());
+				SaveData(SaveText);
+				SaveText = ",";
+				SaveData(SaveText);
+				SaveText = UTF8_TO_TCHAR(std::to_string(calibrationDirectionHeadsetFrame_right[i](2)).c_str());
+				SaveData(SaveText);
+				SaveText = LINE_TERMINATOR;
+				SaveData(SaveText);
+
+			}*/
+			
 
 			bCalibrationEnded = true;
 		}
