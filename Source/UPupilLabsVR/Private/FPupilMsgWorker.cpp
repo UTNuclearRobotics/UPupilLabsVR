@@ -1,5 +1,6 @@
 // Copyright 2018, Institute for Artificial Intelligence - University of Bremen
 // Author: Chifor Tudor
+// Updated by: Christina Petlowany, The University of Texas at Austin
 
 #include "FPupilMsgWorker.h"
 
@@ -126,14 +127,8 @@ void FPupilMsgWorker::StopListening()
 	}
 }
 
-void FPupilMsgWorker::SetVisualsReference(AAPupilLabsVisualMarkersPawn * CalibrationScenePawn)
-{
-	PupilHelper.SetCalibrationSceneVisualReference(CalibrationScenePawn);
-}
-
 void FPupilMsgWorker::SetCalibrationMarker(ACalibrationMarker* MarkerRef, UWorld* World)
 {
-	UE_LOG(LogTemp, Warning, TEXT("[%s][%d] : %s"), TEXT(__FUNCTION__), __LINE__, TEXT("Initializing Calibration"));
 	PupilHelper.SetCalibrationMarker(MarkerRef, World);
 }
 

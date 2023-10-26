@@ -1,5 +1,6 @@
 // Copyright 2018, Institute for Artificial Intelligence - University of Bremen
 // Author: Chifor Tudor
+// Updated by: Christina Petlowany, The University of Texas at Austin
 
 #pragma once
 
@@ -26,7 +27,6 @@ public:
 	static FPupilMsgWorker* StartListening();
 	/**Stops the Thread and ensures its completion before deleting it*/
 	void StopListening();
-	void SetVisualsReference(AAPupilLabsVisualMarkersPawn* CalibrationScenePawn);
 	void SetCalibrationMarker(ACalibrationMarker* MarkerRef, UWorld* World);
 	void UpdateCalibration();
 	Eigen::Matrix3f Rotation;

@@ -1,5 +1,6 @@
 // Copyright 2018, Institute for Artificial Intelligence - University of Bremen
 // Author: Chifor Tudor
+// Updated by: Christina Petlowany, The University of Texas at Austin
 
 #pragma once
 
@@ -29,16 +30,6 @@ struct vector_3d {
 	float z;
 	MSGPACK_DEFINE_ARRAY(x, y, z);
 };
-
-//struct eye_centers_3d {
-//	std::map<std::string, vector_3d> eye_dict;
-//	MSGPACK_DEFINE_ARRAY(eye_dict);
-//};
-//
-//struct gaze_normals_3d {
-//	std::map<std::string, vector_3d> gaze_dict;
-//	MSGPACK_DEFINE_ARRAY(gaze_dict);
-//};
 
 struct norm_pos {
 	float x;

@@ -1,5 +1,6 @@
 // Copyright 2018, Institute for Artificial Intelligence - University of Bremen
 // Author: Chifor Tudor
+// Updated by: Christina Petlowany, The University of Texas at Austin
 
 #include "MyTestPupilActor.h"
 #include <zmq.hpp>
@@ -28,7 +29,6 @@ void AMyTestPupilActor::BeginPlay()
 
 	PupilComm->SetCalibrationMarker(CalibrationMarker, GetWorld());
 
-	// PupilComm->SetVisualsReference(CalibrationScenePawn);
 	PupilComm->OnNewData().AddUObject(this, &AMyTestPupilActor::OnNewPupilData);
 	UE_LOG(LogTemp, Warning, TEXT("[%s][%d]"), TEXT(__FUNCTION__), __LINE__);\
 
