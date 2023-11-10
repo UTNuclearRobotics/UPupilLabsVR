@@ -45,7 +45,7 @@ public:
 	~FPupilLabsUtils();
 	// Public Method accesible by the Worker Thread to get Gaze Structure Data
 	GazeStruct GetGazeStructure();
-	Eigen::Matrix4f transform;
+
 	// Public Method To be called when we do not need to receive any data from pupil service
 	void CloseSubSocket();
 
@@ -59,12 +59,14 @@ public:
 
 	void UpdateCustomCalibration();
 
-	Eigen::Matrix3f Rotation;
+	Eigen::Matrix3f Rotation_r;
 	Eigen::Matrix3f Rotation_l;
 	Eigen::Vector3f eye_loc_right;
 	Eigen::Vector3f eye_loc_left;
-	Eigen::Matrix3f GetRotation();
-	Eigen::Vector3f GetLocation();
+	Eigen::Matrix3f GetRotation_R();
+	Eigen::Matrix3f GetRotation_L();
+	Eigen::Vector3f GetLocation_R();
+	Eigen::Vector3f GetLocation_L();
 
 
 private:
@@ -90,6 +92,7 @@ private:
 	std::vector<Eigen::Vector3f> calibrationLocationHeadsetFrame_right;
 	std::vector<Eigen::Vector3f> calibrationDirectionHeadsetFrame_right;
 	std::vector<Eigen::Vector3f> calibrationLocationHeadsetFrame_left;
+	std::vector<Eigen::Vector3f> calibrationDirectionHeadsetFrame_left;
 	std::vector<Eigen::Vector3f> gazeDir_right;
 	std::vector<Eigen::Vector3f> eyeLoc_right;
 	std::vector<Eigen::Vector3f> gazeDir_left;

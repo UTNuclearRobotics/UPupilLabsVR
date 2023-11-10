@@ -29,10 +29,14 @@ public:
 	void StopListening();
 	void SetCalibrationMarker(ACalibrationMarker* MarkerRef, UWorld* World);
 	void UpdateCalibration();
-	Eigen::Matrix3f Rotation;
-	Eigen::Vector3f Location;
-	Eigen::Matrix3f GetRotation();
-	Eigen::Vector3f GetLocation();
+	Eigen::Matrix3f Rotation_r;
+	Eigen::Matrix3f Rotation_l;
+	Eigen::Vector3f Location_r;
+	Eigen::Vector3f Location_l;
+	Eigen::Matrix3f GetRotation_R();
+	Eigen::Matrix3f GetRotation_L();
+	Eigen::Vector3f GetLocation_R();
+	Eigen::Vector3f GetLocation_L();
 public:
 	DECLARE_EVENT_OneParam(FPupilMsgWorker, DummyEvent, GazeStruct*);
 	DummyEvent& OnNewData()  { return NewPupilDataEvent; }

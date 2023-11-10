@@ -17,6 +17,23 @@ FPupilLabsUtils::FPupilLabsUtils()
 	SynchronizePupilServiceTimestamp();
 	
    	ReqSocket.close();
+
+	Eigen::Matrix3f test_mat;
+	test_mat << 0, 0, 1,
+		-1, 0, 0,
+		0, -1, 0;
+	UE_LOG(LogTemp, Warning, TEXT("[%s][%d] : %s"), TEXT(__FUNCTION__), __LINE__, TEXT("Print R"));
+	UE_LOG(LogTemp, Warning, TEXT("Row 1 is: %f, %f, %f"), test_mat.coeff(0, 0), test_mat.coeff(0, 1), test_mat.coeff(0, 2)); // DO NOT DELETE (SAVE FOR REFERENCE)
+	UE_LOG(LogTemp, Warning, TEXT("Row 2 is: %f, %f, %f"), test_mat.coeff(1, 0), test_mat.coeff(1, 1), test_mat.coeff(1, 2));
+	UE_LOG(LogTemp, Warning, TEXT("Row 3 is: %f, %f, %f"), test_mat.coeff(2, 0), test_mat.coeff(2, 1), test_mat.coeff(2, 2));
+	Eigen::Quaternionf q(test_mat);
+	UE_LOG(LogTemp, Warning, TEXT("[%s][%d] : %s"), TEXT(__FUNCTION__), __LINE__, TEXT("Print quat"));
+	UE_LOG(LogTemp, Warning, TEXT("quat is: %f, %f, %f, %f"), q.x(), q.y(), q.z(), q.w()); // DO NOT DELETE (SAVE FOR REFERENCE)
+	FRotator UERot = FRotator(FQuat(q.x(), q.y(), q.z(), q.w()));
+	UE_LOG(LogTemp, Warning, TEXT("rotat: %f %f %f"), UERot.Pitch, UERot.Roll, UERot.Yaw);
+	Eigen::Vector3f euler = test_mat.eulerAngles(2, 1, 0);
+	UE_LOG(LogTemp, Warning, TEXT("[%s][%d] : %s"), TEXT(__FUNCTION__), __LINE__, TEXT("Print euler"));
+	UE_LOG(LogTemp, Warning, TEXT("euler is: %f, %f, %f"), euler.x(), euler.y(), euler.z()); // DO NOT DELETE (SAVE FOR REFERENCE)
 }
 
 FPupilLabsUtils::~FPupilLabsUtils()
@@ -224,22 +241,28 @@ void FPupilLabsUtils::UpdateCustomCalibration()
 	if (bCalibrationProgressing)
 	{
 		GazeStruct GazeData = GetGazeStructure();
-		if (GazeData.confidence > 0.6 && GazeData.topic == "gaze.3d.01.") // for one eye currently //&& GazeData.confidence>0.6 && !isnan(GazeData.gaze_normal_3d.x)
+		if (GazeData.confidence > 0.6 && GazeData.topic == "gaze.3d.01.")
 		{
 			//UE_LOG(LogTemp, Warning, TEXT("Confidence %f "), GazeData.confidence);
 			//UE_LOG(LogTemp, Warning, TEXT("Topic %s "), *FString(GazeData.topic.c_str()));
-			if (IgnoreSamples > SamplesToIgnoreForEyeMovement)
+			if (IgnoreSamples > SamplesToIgnoreForEyeMovement) // Ignore a few samples to account for people tracking the object
 			{
+				// Get headset position and orientation
                 APlayerCameraManager* camManager = WorldRef->GetFirstPlayerController()->PlayerCameraManager;
                 FVector HMDposition = camManager->GetCameraLocation();
+				FQuat HMDorientation = camManager->GetCameraRotation().Quaternion();
+
+				// Guess for eye positions and locations-- todo make math better
 				FVector eye_offset_right_ue(-4, 3.15, -1.5);
-                FQuat HMDorientation = camManager->GetCameraRotation().Quaternion();
+				FVector eye_offset_left_ue(-4, -3.15, -1.5);
+				Eigen::Vector3f e_r(-4, 3.15, -1.5);
+				Eigen::Vector3f e_l(-4, -3.15, -1.5);
+				eye_loc_right = e_r;
+				eye_loc_left = e_l;
+         
+				// Calculate Calibration object relative transform to 
                 FTransform HMDTransform = FTransform(HMDorientation, HMDposition+eye_offset_right_ue);
                 static const FQuat Identity;
-				Eigen::Vector3f e_l(-4, -3.15, -1.5);
-				Eigen::Vector3f e_r(-4, 3.15, -1.5);
-				eye_loc_left = e_l;
-				eye_loc_right = e_r;
                 FTransform CalTransform = FTransform(Identity, CalibrationLocations[calPoints]);
                 FTransform CaltoHMD = UKismetMathLibrary::MakeRelativeTransform(CalTransform, HMDTransform);
 				std::map<std::string, vector_3d> gaze_normals_3d = GazeData.gaze_normals_3d;
@@ -249,11 +272,11 @@ void FPupilLabsUtils::UpdateCustomCalibration()
 					vector_3d eye_vec = it->second;
 					if (it->first == "0")
 					{
-						gazeDir_right.push_back(Eigen::Vector3f(it->second.x, -it->second.y, it->second.z).normalized());
+						gazeDir_right.push_back(Eigen::Vector3f(it->second.x, it->second.y, it->second.z).normalized());
 					}
 					else if (it->first == "1")
 					{
-						gazeDir_left.push_back(Eigen::Vector3f(it->second.x, -it->second.y, it->second.z).normalized());
+						gazeDir_left.push_back(Eigen::Vector3f(it->second.x, it->second.y, it->second.z).normalized());
 					}
 				}
                 // eyeLoc_right.push_back(Eigen::Vector3f(GazeData.eye_center_3d.x * 10, GazeData.eye_center_3d.y * 10, GazeData.eye_center_3d.z * 10));
@@ -276,21 +299,35 @@ void FPupilLabsUtils::UpdateCustomCalibration()
 		if (calPoints > 4)
 		{
 			bCalibrationProgressing = false;
-			Rotation = Wahba(gazeDir_right, calibrationDirectionHeadsetFrame_right);
-
+			Rotation_r = Wahba(gazeDir_right, calibrationDirectionHeadsetFrame_right);
+			Eigen::Quaternionf q(Rotation_r);
+			FRotator UERot = FRotator(FQuat(q.x(), q.y(), q.z(), q.w()));
+			UE_LOG(LogTemp, Warning, TEXT("Vector: %f %f %f"), UERot.Pitch, UERot.Roll, UERot.Yaw);
 			bCalibrationEnded = true;
 		}
 	}
 }
 
-Eigen::Matrix3f FPupilLabsUtils::GetRotation()
+Eigen::Matrix3f FPupilLabsUtils::GetRotation_R()
 {
 	// For communicating data to Unreal Engine
-	return Rotation;
+	return Rotation_r;
 }
 
-Eigen::Vector3f FPupilLabsUtils::GetLocation()
+Eigen::Matrix3f FPupilLabsUtils::GetRotation_L()
+{
+	// For communicating data to Unreal Engine
+	return Rotation_l;
+}
+
+Eigen::Vector3f FPupilLabsUtils::GetLocation_R()
 {
 	// For communicating data to Unreal Engine
 	return eye_loc_right;
+}
+
+Eigen::Vector3f FPupilLabsUtils::GetLocation_L()
+{
+	// For communicating data to Unreal Engine
+	return eye_loc_left;
 }

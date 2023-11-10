@@ -66,8 +66,8 @@ void AMyTestPupilActor::PerformRaycast(UWorld* CurrentWorld)
 				APlayerCameraManager* camManager = CurrentWorld->GetFirstPlayerController()->PlayerCameraManager;
 				FVector HMDposition = camManager->GetCameraLocation();
 				FRotator HMDorientation = camManager->GetCameraRotation();
-				Eigen::Matrix3f Rotation = PupilComm->GetRotation();
-				Eigen::Vector3f Location = PupilComm->GetLocation();
+				Eigen::Matrix3f Rotation = PupilComm->GetRotation_R();
+				Eigen::Vector3f Location = PupilComm->GetLocation_L();
 				FVector TraceStart = FVector(Location.x(), Location.y(), Location.z()) + HMDposition;
 				TraceStart = HMDposition;
 				Eigen::Vector3f TraceVec = Rotation * Eigen::Vector3f(ReceivedGazeStructure->gaze_normals_3d.begin()->second.x, ReceivedGazeStructure->gaze_normals_3d.begin()->second.y, ReceivedGazeStructure->gaze_normals_3d.begin()->second.z).normalized();
@@ -97,22 +97,23 @@ void AMyTestPupilActor::PerformRaycast(UWorld* CurrentWorld)
 	//}
 }
 
-////MOUSE TEST
-//FMatrix CameraViewMatrix; //Todo maybe this is the way
-//FMatrix CameraProjectionMatrix;
-//FMatrix inv = Inverse(CameraProjectionMatrix * CameraViewMatrix);
-////
 
+// Change to delegate
+// Create a local copy of the latest data received
+// Avoid dynamic memory allocation
 FUEStruct AMyTestPupilActor::PupilData()
 {
-	Eigen::Vector3f Location = PupilComm->GetLocation();
-	Eigen::Matrix3f Rotation = PupilComm->GetRotation();
+	// todo make not happen when calibration is occurring
+	Eigen::Vector3f Location = PupilComm->GetLocation_R();
+	Eigen::Matrix3f Rotation = PupilComm->GetRotation_R();
+	Eigen::Vector3f Location_l = PupilComm->GetLocation_L();
+	Eigen::Matrix3f Rotation_l = PupilComm->GetRotation_L();
 	Eigen::Quaternionf q(Rotation);
-	FRotator UERot = FRotator(FQuat(q.x(), q.y(), q.z(), q.w()));
+	//FRotator UERot = FRotator(FQuat(q.x(), q.y(), q.z(), q.w()));
 	FUEStruct pupilStruct;
 	if (canRayCast)
 	{
-		if (ReceivedGazeStructure->confidence > 0.6 && ReceivedGazeStructure->topic == "gaze.3d.01.")
+		if (ReceivedGazeStructure->topic == "gaze.3d.01.") // ReceivedGazeStructure->confidence > 0.6 && 
 		{
 			if (ReceivedGazeStructure->gaze_normals_3d.begin()->first == "0")
 			{
@@ -120,9 +121,9 @@ FUEStruct AMyTestPupilActor::PupilData()
 				pupilStruct.eye_loc.Y = Location.y();
 				pupilStruct.eye_loc.Z = Location.z();
 				pupilStruct.gaze_dir.X = ReceivedGazeStructure->gaze_normals_3d.begin()->second.x;
-				pupilStruct.gaze_dir.Y = -ReceivedGazeStructure->gaze_normals_3d.begin()->second.y;
+				pupilStruct.gaze_dir.Y = ReceivedGazeStructure->gaze_normals_3d.begin()->second.y;
 				pupilStruct.gaze_dir.Z = ReceivedGazeStructure->gaze_normals_3d.begin()->second.z;
-				pupilStruct.gaze_rot = UERot;
+				pupilStruct.gaze_rot = FQuat(q.x(), q.y(), q.z(), q.w());
 			}
 
 		}

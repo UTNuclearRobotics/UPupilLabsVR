@@ -12,5 +12,5 @@ struct FUEStruct
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Pupil Data")
 	FVector gaze_dir;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Pupil Data")
-	FRotator gaze_rot;
+	FQuat gaze_rot;
 };
