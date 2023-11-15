@@ -32,7 +32,6 @@ protected:
 	///--BEGIN RAYCAST--///
 	//Method for receiving the GazeStructure for The RayCasting
 	void OnNewPupilData(GazeStruct* GazeStructure);
-	void PerformRaycast(UWorld* CurrentWorld);
 	//Received Data From The Worker's Event
 	GazeStruct* ReceivedGazeStructure;
 	///--END RAYCAST--///

@@ -54,16 +54,9 @@ uint32 FPupilMsgWorker::Run()
 		Rotation_r = PupilHelper.GetRotation_R();
 		Location_r = PupilHelper.GetLocation_R();
 		can_gaze = PupilHelper.CanGaze();
-		double Confidence = ReceivedGazeStructure.base_data.pupil.confidence;
 		//If Confidence bigger than 60 % send delegate
 		GazeStruct ReceivedGazeStruct;
-		double x = ReceivedGazeStructure.base_data.pupil.norm_pos.x;
-		double y = ReceivedGazeStructure.base_data.pupil.norm_pos.y;
-		if (Confidence > 0.4f){
-		// UE_LOG(LogTemp, Warning, TEXT("[%s][%d]CONF XXX : %f"), TEXT(__FUNCTION__), __LINE__, x);
-		// UE_LOG(LogTemp, Warning, TEXT("[%s][%d]CONF YYY : %f"), TEXT(__FUNCTION__), __LINE__, y);
 		NewPupilDataEvent.Broadcast(&ReceivedGazeStructure);
-			}
 		}
 	}
 	return 1;

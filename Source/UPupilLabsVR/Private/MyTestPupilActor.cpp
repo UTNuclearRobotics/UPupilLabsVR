@@ -54,79 +54,49 @@ void AMyTestPupilActor::OnNewPupilData(GazeStruct* GazeStructure)
 	// UE_LOG(LogTemp, Warning, TEXT("[%s][%d] eye_center_x : %f"), TEXT(__FUNCTION__), __LINE__, this->ReceivedGazeStructure->eye_center_3d.x);
 }
 
-void AMyTestPupilActor::PerformRaycast(UWorld* CurrentWorld)
-{
-	//APlayerController* UPupilPlayerController = UGameplayStatics::GetPlayerController(GetWorld(), 0);
-	if (canRayCast)
-	{
-		if (ReceivedGazeStructure->confidence > 0.6 && ReceivedGazeStructure->topic == "gaze.3d.01.")
-		{
-			if (ReceivedGazeStructure->gaze_normals_3d.begin()->first == "0")
-			{
-				APlayerCameraManager* camManager = CurrentWorld->GetFirstPlayerController()->PlayerCameraManager;
-				FVector HMDposition = camManager->GetCameraLocation();
-				FRotator HMDorientation = camManager->GetCameraRotation();
-				Eigen::Matrix3f Rotation = PupilComm->GetRotation_R();
-				Eigen::Vector3f Location = PupilComm->GetLocation_L();
-				FVector TraceStart = FVector(Location.x(), Location.y(), Location.z()) + HMDposition;
-				TraceStart = HMDposition;
-				Eigen::Vector3f TraceVec = Rotation * Eigen::Vector3f(ReceivedGazeStructure->gaze_normals_3d.begin()->second.x, ReceivedGazeStructure->gaze_normals_3d.begin()->second.y, ReceivedGazeStructure->gaze_normals_3d.begin()->second.z).normalized();
-				FVector TraceDir = FVector(TraceVec.x(), -TraceVec.y(), TraceVec.z());
-				// UE_LOG(LogTemp, Warning, TEXT("tracedir is %s"), *TraceDir.ToString());
-				// FVector TraceEnd = TraceStart + 50 * HMDorientation.RotateVector(TraceDir);
-				FVector TraceEnd = TraceStart + 1 * HMDorientation.Vector();
-				UE_LOG(LogTemp, Warning, TEXT("tracedir is %s"), *HMDorientation.RotateVector(TraceDir).ToString());
-				FHitResult* HitResult = new FHitResult(ForceInit);
-				FCollisionQueryParams* TraceParams = new FCollisionQueryParams();
-				DrawDebugLine(CurrentWorld, TraceStart, TraceEnd, FColor(255, 0, 0), true, 0.3, 255, 10.0);
-			}
-		}
-	}
-
-	//if (GetWorld()->LineTraceSingleByChannel(*HitResult, TraceStart, TraceEnd, ECC_Visibility, *TraceParams))
-	//{
-	//	UE_LOG(LogTemp, Warning, TEXT("[%s][%d]"), TEXT(__FUNCTION__), __LINE__);
-	//	//	UE_LOG(LogTemp, Warning, TEXT("[%s][%d]RAYTRACE XXX : %f"), TEXT(__FUNCTION__), __LINE__, XGaze);
-	//	//	UE_LOG(LogTemp, Warning, TEXT("[%s][%d]RAYTRACE YYY : %f"), TEXT(__FUNCTION__), __LINE__, YGaze);
-	//	FVector_NetQuantize var = HitResult->ImpactPoint;
-	//	FVector HitPointLocation = var;
-	//	DrawDebugPoint(GetWorld(), TraceEnd, 20, FColor(0, 255, 127), false, 1.03);
-
-	//	DrawDebugPoint(GetWorld(), HitPointLocation, 20, FColor(0, 0, 238), false, 0.03);
-	//	DrawDebugLine(GetWorld(), TraceStart, TraceEnd, FColor(238, 0, 238), true);
-	//}
-}
-
-
 // Change to delegate
 // Create a local copy of the latest data received
 // Avoid dynamic memory allocation
 FUEStruct AMyTestPupilActor::PupilData()
 {
-	// todo make not happen when calibration is occurring
-	Eigen::Vector3f Location = PupilComm->GetLocation_R();
-	Eigen::Matrix3f Rotation = PupilComm->GetRotation_R();
+	Eigen::Vector3f Location_r = PupilComm->GetLocation_R();
+	Eigen::Matrix3f Rotation_r = PupilComm->GetRotation_R();
 	Eigen::Vector3f Location_l = PupilComm->GetLocation_L();
 	Eigen::Matrix3f Rotation_l = PupilComm->GetRotation_L();
-	Eigen::Quaternionf q(Rotation);
+	Eigen::Quaternionf q_r(Rotation_r);
+	Eigen::Quaternionf q_l(Rotation_l);
 	//FRotator UERot = FRotator(FQuat(q.x(), q.y(), q.z(), q.w()));
 	FUEStruct pupilStruct;
 	if (canRayCast)
 	{
-		pupilStruct.can_gaze = true;
 		if (ReceivedGazeStructure->topic == "gaze.3d.01.") // ReceivedGazeStructure->confidence > 0.6 && 
 		{
-			if (ReceivedGazeStructure->gaze_normals_3d.begin()->first == "0")
+			pupilStruct.confidence = ReceivedGazeStructure->confidence;
+			for (std::map<std::string, vector_3d>::iterator it = ReceivedGazeStructure->gaze_normals_3d.begin(); it != ReceivedGazeStructure->gaze_normals_3d.end(); ++it)
 			{
-				pupilStruct.eye_loc.X = Location.x();
-				pupilStruct.eye_loc.Y = Location.y();
-				pupilStruct.eye_loc.Z = Location.z();
-				pupilStruct.gaze_dir.X = ReceivedGazeStructure->gaze_normals_3d.begin()->second.x;
-				pupilStruct.gaze_dir.Y = ReceivedGazeStructure->gaze_normals_3d.begin()->second.y;
-				pupilStruct.gaze_dir.Z = ReceivedGazeStructure->gaze_normals_3d.begin()->second.z;
-				pupilStruct.gaze_rot = FQuat(q.x(), q.y(), q.z(), q.w());
+				std::string eye_d = it->first;
+				vector_3d eye_vec = it->second;
+				if (it->first == "0")
+				{
+					pupilStruct.eye_loc_r.X = Location_r.x();
+					pupilStruct.eye_loc_r.Y = Location_r.y();
+					pupilStruct.eye_loc_r.Z = Location_r.z();
+					pupilStruct.gaze_dir_r.X = it->second.x;
+					pupilStruct.gaze_dir_r.Y = it->second.y;
+					pupilStruct.gaze_dir_r.Z = it->second.z;
+					pupilStruct.gaze_rot_r = FQuat(q_r.x(), q_r.y(), q_r.z(), q_r.w());
+				}
+				else if (it->first == "1")
+				{
+					pupilStruct.eye_loc_l.X = Location_l.x();
+					pupilStruct.eye_loc_l.Y = Location_l.y();
+					pupilStruct.eye_loc_l.Z = Location_l.z();
+					pupilStruct.gaze_dir_l.X = it->second.x;
+					pupilStruct.gaze_dir_l.Y = it->second.y;
+					pupilStruct.gaze_dir_l.Z = it->second.z;
+					pupilStruct.gaze_rot_l = FQuat(q_l.x(), q_l.y(), q_l.z(), q_l.w());
+				}
 			}
-
 		}
 	}
 //
