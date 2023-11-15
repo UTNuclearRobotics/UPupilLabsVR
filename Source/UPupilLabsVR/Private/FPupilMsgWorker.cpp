@@ -53,6 +53,7 @@ uint32 FPupilMsgWorker::Run()
 		ReceivedGazeStructure = PupilHelper.GetGazeStructure();
 		Rotation_r = PupilHelper.GetRotation_R();
 		Location_r = PupilHelper.GetLocation_R();
+		can_gaze = PupilHelper.CanGaze();
 		double Confidence = ReceivedGazeStructure.base_data.pupil.confidence;
 		//If Confidence bigger than 60 % send delegate
 		GazeStruct ReceivedGazeStruct;
@@ -160,4 +161,9 @@ Eigen::Vector3f FPupilMsgWorker::GetLocation_R()
 Eigen::Vector3f FPupilMsgWorker::GetLocation_L()
 {
 	return Location_l;
+}
+
+bool FPupilMsgWorker::CanGaze()
+{
+	return can_gaze;
 }

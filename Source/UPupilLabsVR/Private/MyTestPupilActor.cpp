@@ -113,6 +113,7 @@ FUEStruct AMyTestPupilActor::PupilData()
 	FUEStruct pupilStruct;
 	if (canRayCast)
 	{
+		pupilStruct.can_gaze = true;
 		if (ReceivedGazeStructure->topic == "gaze.3d.01.") // ReceivedGazeStructure->confidence > 0.6 && 
 		{
 			if (ReceivedGazeStructure->gaze_normals_3d.begin()->first == "0")
@@ -130,4 +131,10 @@ FUEStruct AMyTestPupilActor::PupilData()
 	}
 //
 	return pupilStruct;
+}
+
+bool AMyTestPupilActor::CanGaze()
+{
+	bool can_gaze = PupilComm->CanGaze();
+	return can_gaze;
 }

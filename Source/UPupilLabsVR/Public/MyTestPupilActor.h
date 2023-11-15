@@ -45,4 +45,6 @@ public:
 	FPupilMsgWorker* PupilComm;
 	UFUNCTION(BlueprintCallable, Category = "Pupil Labs", meta = (Keywords = "Access Gaze Ray"))
 		FUEStruct PupilData();
+	UFUNCTION(BlueprintCallable, Category = "Pupil Labs", meta = (Keywords = "Can Gaze"))
+		bool CanGaze();
 };

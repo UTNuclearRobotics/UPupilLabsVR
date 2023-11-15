@@ -163,9 +163,13 @@ bool FPupilLabsUtils::CanGaze()
 	// Used by MyTestPupilActor
 	if (bCalibrationStarted && bCalibrationEnded)
 		{
-			return true;
+			can_gaze = true;
 		}
-	else return false;
+	else
+	{
+		can_gaze = false;
+	}
+	return can_gaze;
 }
 
 void FPupilLabsUtils::SaveData(FString SaveText)

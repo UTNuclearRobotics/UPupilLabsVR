@@ -37,6 +37,8 @@ public:
 	Eigen::Matrix3f GetRotation_L();
 	Eigen::Vector3f GetLocation_R();
 	Eigen::Vector3f GetLocation_L();
+	bool can_gaze;
+	bool CanGaze();
 public:
 	DECLARE_EVENT_OneParam(FPupilMsgWorker, DummyEvent, GazeStruct*);
 	DummyEvent& OnNewData()  { return NewPupilDataEvent; }

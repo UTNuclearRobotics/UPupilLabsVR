@@ -52,6 +52,7 @@ public:
 	void InitializeCalibration();
 
 	bool CanGaze();
+	bool can_gaze;
 
 
 	ACalibrationMarker* CalibrationMarker;
