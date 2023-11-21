@@ -20,8 +20,6 @@ void AMyTestPupilActor::BeginPlay()
 	FVector SpawnLocation(1000, 1000, 1000);
 	FRotator SpawnRotation(0.0f, 0.0f, 0.0f);
 	FActorSpawnParameters SpawnParameters = FActorSpawnParameters();
-	// AAPupilLabsVisualMarkersPawn* CalibrationScenePawn = GetWorld()->SpawnActor<AAPupilLabsVisualMarkersPawn>(AAPupilLabsVisualMarkersPawn::StaticClass(), SpawnLocation, SpawnRotation, SpawnParameters);
-	//SPAWN PAWN
 
 	ACalibrationMarker* CalibrationMarker = GetWorld()->SpawnActor<ACalibrationMarker>(ACalibrationMarker::StaticClass(), SpawnLocation, SpawnRotation, SpawnParameters);
 
@@ -34,24 +32,26 @@ void AMyTestPupilActor::BeginPlay()
 
 	World = GetWorld();
 }
+
 // Called every frame
 void AMyTestPupilActor::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	PupilComm->UpdateCalibration();
-	// PerformRaycast(World);
+	// PupilComm->UpdateCalibration();
 }
 
 void AMyTestPupilActor::OnNewPupilData(GazeStruct* GazeStructure)
 {
 	this->ReceivedGazeStructure = GazeStructure;
+	Location_r = PupilComm->GetLocation_R();
+	Rotation_r = PupilComm->GetRotation_R();
+	Location_l = PupilComm->GetLocation_L();
+	Rotation_l = PupilComm->GetRotation_L();
+	Eigen::Quaternionf q_1(Rotation_r);
+	Eigen::Quaternionf q_2(Rotation_l);
+	q_r = q_1;
+	q_l = q_2;
 	canRayCast = true;
-	// UE_LOG(LogTemp, Warning, TEXT("[%s][%d] Norm Data : %f"), TEXT(__FUNCTION__), __LINE__, this->ReceivedGazeStructure->base_data.pupil.ellipse.center.x);
-	// UE_LOG(LogTemp, Warning, TEXT("[%s][%d] DirX : %f"), TEXT(__FUNCTION__), __LINE__, this->ReceivedGazeStructure->gaze_normal_3d.x);
-	// UE_LOG(LogTemp, Warning, TEXT("[%s][%d] DirY : %f"), TEXT(__FUNCTION__), __LINE__, this->ReceivedGazeStructure->gaze_normal_3d.y);
-	// UE_LOG(LogTemp, Warning, TEXT("[%s][%d] DirZ : %f"), TEXT(__FUNCTION__), __LINE__, this->ReceivedGazeStructure->gaze_normal_3d.z);
-	// UE_LOG(LogTemp, Warning, TEXT("[%s][%d] Text : %f"), TEXT(__FUNCTION__), __LINE__, this->ReceivedGazeStructure->confidence);
-	// UE_LOG(LogTemp, Warning, TEXT("[%s][%d] eye_center_x : %f"), TEXT(__FUNCTION__), __LINE__, this->ReceivedGazeStructure->eye_center_3d.x);
 }
 
 // Change to delegate
@@ -59,17 +59,18 @@ void AMyTestPupilActor::OnNewPupilData(GazeStruct* GazeStructure)
 // Avoid dynamic memory allocation
 FUEStruct AMyTestPupilActor::PupilData()
 {
-	Eigen::Vector3f Location_r = PupilComm->GetLocation_R();
-	Eigen::Matrix3f Rotation_r = PupilComm->GetRotation_R();
-	Eigen::Vector3f Location_l = PupilComm->GetLocation_L();
-	Eigen::Matrix3f Rotation_l = PupilComm->GetRotation_L();
-	Eigen::Quaternionf q_r(Rotation_r);
-	Eigen::Quaternionf q_l(Rotation_l);
-	//FRotator UERot = FRotator(FQuat(q.x(), q.y(), q.z(), q.w()));
+	//Eigen::Vector3f Location_r = PupilComm->GetLocation_R();
+	//Eigen::Matrix3f Rotation_r = PupilComm->GetRotation_R();
+	//Eigen::Vector3f Location_l = PupilComm->GetLocation_L();
+	//Eigen::Matrix3f Rotation_l = PupilComm->GetRotation_L();
+	//Eigen::Quaternionf q_r(Rotation_r);
+	//Eigen::Quaternionf q_l(Rotation_l);
+
 	FUEStruct pupilStruct;
+
 	if (canRayCast)
 	{
-		if (ReceivedGazeStructure->topic == "gaze.3d.01.") // ReceivedGazeStructure->confidence > 0.6 && 
+		if (ReceivedGazeStructure->topic == "gaze.3d.01.")
 		{
 			pupilStruct.confidence = ReceivedGazeStructure->confidence;
 			for (std::map<std::string, vector_3d>::iterator it = ReceivedGazeStructure->gaze_normals_3d.begin(); it != ReceivedGazeStructure->gaze_normals_3d.end(); ++it)
@@ -99,7 +100,6 @@ FUEStruct AMyTestPupilActor::PupilData()
 			}
 		}
 	}
-//
 	return pupilStruct;
 }
 

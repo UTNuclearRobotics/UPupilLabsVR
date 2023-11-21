@@ -52,7 +52,7 @@ public:
 	void InitializeCalibration();
 
 	bool CanGaze();
-	bool can_gaze;
+	bool can_gaze = false;
 
 
 	ACalibrationMarker* CalibrationMarker;
@@ -68,6 +68,9 @@ public:
 	Eigen::Matrix3f GetRotation_L();
 	Eigen::Vector3f GetLocation_R();
 	Eigen::Vector3f GetLocation_L();
+
+	FString GetWriteData();
+	FString data_to_write;
 
 
 private:

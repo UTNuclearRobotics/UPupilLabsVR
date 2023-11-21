@@ -37,6 +37,12 @@ protected:
 	///--END RAYCAST--///
 	UWorld* World;
 	bool canRayCast = false;
+	Eigen::Vector3f Location_r;
+	Eigen::Matrix3f Rotation_r;
+	Eigen::Vector3f Location_l;
+	Eigen::Matrix3f Rotation_l;
+	Eigen::Quaternionf q_r;
+	Eigen::Quaternionf q_l;
 
 public:
 	// Called every frame

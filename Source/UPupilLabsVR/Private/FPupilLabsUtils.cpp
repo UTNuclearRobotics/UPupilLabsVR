@@ -68,6 +68,7 @@ zmq::socket_t* FPupilLabsUtils::ConnectToSubport(zmq::socket_t *ReqSocket,const 
 	// Subscriber socket
 	std::string SubPortAddr = Addr + ReceiveSubPort(ReqSocket);
 	zmq::socket_t* SubSocketTemp = new zmq::socket_t(*ZmqContext, ZMQ_SUB);
+	SubSocketTemp->setsockopt(ZMQ_RCVHWM, 6);
 	SubSocketTemp->connect(SubPortAddr);
 	SubSocketTemp->setsockopt(ZMQ_SUBSCRIBE, Topic.c_str(), Topic.length());
 	bSubSocketClosed = false;
@@ -87,7 +88,7 @@ GazeStruct FPupilLabsUtils::ConvertMsgPackToGazeStruct(zmq::message_t info)
 	ss << deserialized;
 	std::string demo = ss.str();
 	deserialized.convert(ReceivedGazeStruct);
-	FString SaveText = UTF8_TO_TCHAR(demo.c_str());
+	data_to_write = UTF8_TO_TCHAR(demo.c_str());
 	// SaveData(SaveText);
 	return ReceivedGazeStruct;
 }
@@ -144,6 +145,11 @@ GazeStruct FPupilLabsUtils::GetGazeStructure()
 	SubSocket->recv(&info);
 	GazeStruct ReceivedGazeStruct = ConvertMsgPackToGazeStruct(std::move(info));
 	return ReceivedGazeStruct;
+}
+
+FString FPupilLabsUtils::GetWriteData()
+{
+	return data_to_write;
 }
 
 void FPupilLabsUtils::InitializeCalibration()
