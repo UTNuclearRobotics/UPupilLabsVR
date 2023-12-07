@@ -30,8 +30,8 @@ void AEyeTracker::Tick(float DeltaTime)
         // GazeData.ConfidenceValue;
         // GazeData.GazeDirection;
         // GazeData.GazeOrigin
-        FDateTime CurrentUETimestamp = FDateTime::UtcNow();
-        FString SaveText = FString::FromInt(CurrentUETimestamp.GetMinute() * 60 + CurrentUETimestamp.GetSecond()) + "." + FString::FromInt(CurrentUETimestamp.GetMillisecond()) + "," + FString::SanitizeFloat(GazeData.ConfidenceValue) + "," + GazeData.GazeDirection.ToString() + "," + GazeData.GazeOrigin.ToString() + "," + HMDposition.ToString() + "," + HMDorientation.ToString() + "\n";
-        FFileHelper::SaveStringToFile(SaveText, *(FPaths::ProjectConfigDir() + UTF8TEXT("SaveFileTestHL")), FFileHelper::EEncodingOptions::AutoDetect, &IFileManager::Get(), FILEWRITE_Append);
+        // FDateTime CurrentUETimestamp = FDateTime::UtcNow();
+        // FString SaveText = FString::FromInt(CurrentUETimestamp.GetMinute() * 60 + CurrentUETimestamp.GetSecond()) + "." + FString::FromInt(CurrentUETimestamp.GetMillisecond()) + "," + FString::SanitizeFloat(GazeData.ConfidenceValue) + "," + GazeData.GazeDirection.ToString() + "," + GazeData.GazeOrigin.ToString() + "," + HMDposition.ToString() + "," + HMDorientation.ToString() + "\n";
+        // FFileHelper::SaveStringToFile(SaveText, *(FPaths::ProjectConfigDir() + UTF8TEXT("SaveFileTestHL")), FFileHelper::EEncodingOptions::AutoDetect, &IFileManager::Get(), FILEWRITE_Append);
     }
 }

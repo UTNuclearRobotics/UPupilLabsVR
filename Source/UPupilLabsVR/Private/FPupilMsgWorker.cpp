@@ -51,11 +51,11 @@ uint32 FPupilMsgWorker::Run()
 	{
 		//FPlatformProcess::Sleep(0.01);
 		// ReceivedGazeStructure = PupilHelper.GetGazeStructure();
-		UE_LOG(LogTemp, Warning, TEXT("[%s][%d]"), TEXT(__FUNCTION__), __LINE__);
-		ReceivedGazeStructure = PupilHelper.GetGazeStructure();
-		FDateTime CurrentUETimestamp = FDateTime::UtcNow();
-		FString write_data = FString::FromInt(CurrentUETimestamp.GetMinute() * 60 + CurrentUETimestamp.GetSecond()) + "." + FString::FromInt(CurrentUETimestamp.GetMillisecond()) + "," + PupilHelper.GetWriteData() + "\n";
-		FFileHelper::SaveStringToFile(write_data, *(FPaths::ProjectConfigDir() + UTF8TEXT("SaveFileTestPL")), FFileHelper::EEncodingOptions::AutoDetect, &IFileManager::Get(), FILEWRITE_Append);
+		// UE_LOG(LogTemp, Warning, TEXT("[%s][%d]"), TEXT(__FUNCTION__), __LINE__);
+		// ReceivedGazeStructure = PupilHelper.GetGazeStructure();
+		// FDateTime CurrentUETimestamp = FDateTime::UtcNow();
+		// FString write_data = FString::FromInt(CurrentUETimestamp.GetMinute() * 60 + CurrentUETimestamp.GetSecond()) + "." + FString::FromInt(CurrentUETimestamp.GetMillisecond()) + "," + PupilHelper.GetWriteData() + "\n";
+		// FFileHelper::SaveStringToFile(write_data, *(FPaths::ProjectConfigDir() + UTF8TEXT("SaveFileTestPL")), FFileHelper::EEncodingOptions::AutoDetect, &IFileManager::Get(), FILEWRITE_Append);
 		if(PupilHelper.CanGaze()){
 		ReceivedGazeStructure = PupilHelper.GetGazeStructure();
 		Rotation_r = PupilHelper.GetRotation_R();
