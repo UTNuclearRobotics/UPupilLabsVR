@@ -18,22 +18,22 @@ FPupilLabsUtils::FPupilLabsUtils()
 	
    	ReqSocket.close();
 
-	Eigen::Matrix3f test_mat;
-	test_mat << 0, 0, 1,
-		-1, 0, 0,
-		0, -1, 0;
-	UE_LOG(LogTemp, Warning, TEXT("[%s][%d] : %s"), TEXT(__FUNCTION__), __LINE__, TEXT("Print R"));
-	UE_LOG(LogTemp, Warning, TEXT("Row 1 is: %f, %f, %f"), test_mat.coeff(0, 0), test_mat.coeff(0, 1), test_mat.coeff(0, 2)); // DO NOT DELETE (SAVE FOR REFERENCE)
-	UE_LOG(LogTemp, Warning, TEXT("Row 2 is: %f, %f, %f"), test_mat.coeff(1, 0), test_mat.coeff(1, 1), test_mat.coeff(1, 2));
-	UE_LOG(LogTemp, Warning, TEXT("Row 3 is: %f, %f, %f"), test_mat.coeff(2, 0), test_mat.coeff(2, 1), test_mat.coeff(2, 2));
-	Eigen::Quaternionf q(test_mat);
-	UE_LOG(LogTemp, Warning, TEXT("[%s][%d] : %s"), TEXT(__FUNCTION__), __LINE__, TEXT("Print quat"));
-	UE_LOG(LogTemp, Warning, TEXT("quat is: %f, %f, %f, %f"), q.x(), q.y(), q.z(), q.w()); // DO NOT DELETE (SAVE FOR REFERENCE)
-	FRotator UERot = FRotator(FQuat(q.x(), q.y(), q.z(), q.w()));
-	UE_LOG(LogTemp, Warning, TEXT("rotat: %f %f %f"), UERot.Pitch, UERot.Roll, UERot.Yaw);
-	Eigen::Vector3f euler = test_mat.eulerAngles(2, 1, 0);
-	UE_LOG(LogTemp, Warning, TEXT("[%s][%d] : %s"), TEXT(__FUNCTION__), __LINE__, TEXT("Print euler"));
-	UE_LOG(LogTemp, Warning, TEXT("euler is: %f, %f, %f"), euler.x(), euler.y(), euler.z()); // DO NOT DELETE (SAVE FOR REFERENCE)
+	//Eigen::Matrix3f test_mat;
+	//test_mat << 0, 0, 1,
+	//	-1, 0, 0,
+	//	0, -1, 0;
+	//UE_LOG(LogTemp, Warning, TEXT("[%s][%d] : %s"), TEXT(__FUNCTION__), __LINE__, TEXT("Print R"));
+	//UE_LOG(LogTemp, Warning, TEXT("Row 1 is: %f, %f, %f"), test_mat.coeff(0, 0), test_mat.coeff(0, 1), test_mat.coeff(0, 2)); // DO NOT DELETE (SAVE FOR REFERENCE)
+	//UE_LOG(LogTemp, Warning, TEXT("Row 2 is: %f, %f, %f"), test_mat.coeff(1, 0), test_mat.coeff(1, 1), test_mat.coeff(1, 2));
+	//UE_LOG(LogTemp, Warning, TEXT("Row 3 is: %f, %f, %f"), test_mat.coeff(2, 0), test_mat.coeff(2, 1), test_mat.coeff(2, 2));
+	//Eigen::Quaternionf q(test_mat);
+	//UE_LOG(LogTemp, Warning, TEXT("[%s][%d] : %s"), TEXT(__FUNCTION__), __LINE__, TEXT("Print quat"));
+	//UE_LOG(LogTemp, Warning, TEXT("quat is: %f, %f, %f, %f"), q.x(), q.y(), q.z(), q.w()); // DO NOT DELETE (SAVE FOR REFERENCE)
+	//FRotator UERot = FRotator(FQuat(q.x(), q.y(), q.z(), q.w()));
+	//UE_LOG(LogTemp, Warning, TEXT("rotat: %f %f %f"), UERot.Pitch, UERot.Roll, UERot.Yaw);
+	//Eigen::Vector3f euler = test_mat.eulerAngles(2, 1, 0);
+	//UE_LOG(LogTemp, Warning, TEXT("[%s][%d] : %s"), TEXT(__FUNCTION__), __LINE__, TEXT("Print euler"));
+	//UE_LOG(LogTemp, Warning, TEXT("euler is: %f, %f, %f"), euler.x(), euler.y(), euler.z()); // DO NOT DELETE (SAVE FOR REFERENCE)
 }
 
 FPupilLabsUtils::~FPupilLabsUtils()
@@ -158,8 +158,6 @@ void FPupilLabsUtils::InitializeCalibration()
 	UE_LOG(LogTemp, Warning, TEXT("[%s][%d] : %s"), TEXT(__FUNCTION__), __LINE__, TEXT("Initializing Calibration"));
 	SamplesToIgnoreForEyeMovement = 40;
 	CurrentCalibrationSamples = 0;
-	bCalibrationStarted = true;
-	bCalibrationEnded = false;
 	CustomCalibration();
 }
 
@@ -167,13 +165,13 @@ bool FPupilLabsUtils::CanGaze()
 {
 	// Boolean for opening up full data stream from PL after calibration
 	// Used by MyTestPupilActor
-	if (bCalibrationStarted && bCalibrationEnded)
+	if (bCalibrationProgressing)
 		{
-			can_gaze = true;
+			can_gaze = false;
 		}
 	else
 	{
-		can_gaze = false;
+		can_gaze = true;
 	}
 	return can_gaze;
 }
@@ -187,12 +185,29 @@ void FPupilLabsUtils::SaveData(FString SaveText)
 
 void FPupilLabsUtils::CustomCalibration()
 {
-	// Set calibration locations; todo fix to make in front of HoloLens at start position
-	CalibrationLocations.push_back(FVector(75, 0, 0));
-	CalibrationLocations.push_back(FVector(75, 10, 10));
-	CalibrationLocations.push_back(FVector(75, -10, 10));
-	CalibrationLocations.push_back(FVector(75, 10, -10));
-	CalibrationLocations.push_back(FVector(75, -10, -10));
+	// Set calibration locations
+	APlayerCameraManager* camManager = WorldRef->GetFirstPlayerController()->PlayerCameraManager;
+	FVector HMDposition = camManager->GetCameraLocation();
+	FVector HMDlook = camManager->GetActorForwardVector();
+	FQuat HMDorientation = camManager->GetCameraRotation().Quaternion();
+
+	// FVector CalLocation = HMDposition + 75* HMDorientation.RotateVector(FVector(1, 0, 0));
+	FVector position1 = FVector(1, 0, 0);
+	position1.Normalize();
+	FVector position2 = FVector(1, 0.4, 0.4);
+	position2.Normalize();
+	FVector position3 = FVector(1, -0.4, 0.4);
+	position3.Normalize();
+	FVector position4 = FVector(1, 0.4, -0.4);
+	position4.Normalize();
+	FVector position5 = FVector(1, -0.4, -0.4);
+	position5.Normalize();
+
+	CalibrationLocations.push_back(HMDposition + 75 * HMDlook * position1);
+	CalibrationLocations.push_back(HMDposition + 75 * HMDlook * position2);
+	CalibrationLocations.push_back(HMDposition + 75 * HMDlook * position3);
+	CalibrationLocations.push_back(HMDposition + 75 * HMDlook * position4);
+	CalibrationLocations.push_back(HMDposition + 75 * HMDlook * position5);
 
 
 	// Place initial calibration point
@@ -313,7 +328,7 @@ void FPupilLabsUtils::UpdateCustomCalibration()
 			Eigen::Quaternionf q(Rotation_r);
 			FRotator UERot = FRotator(FQuat(q.x(), q.y(), q.z(), q.w()));
 			UE_LOG(LogTemp, Warning, TEXT("Vector: %f %f %f"), UERot.Pitch, UERot.Roll, UERot.Yaw);
-			bCalibrationEnded = true;
+			CalibrationMarker->Destroy();
 		}
 	}
 }

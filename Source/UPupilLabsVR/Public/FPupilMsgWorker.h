@@ -11,7 +11,7 @@
 
 #include "DrawDebugHelpers.h"
 #include "Engine/Engine.h"
-#include "Editor.h"
+// #include "Editor.h"
 #include "GameFramework/PlayerController.h"
 #include "FPupilLabsUtils.h"
 #include "CalibrationMarker.h"
@@ -23,10 +23,6 @@
 class FPupilMsgWorker : public FRunnable
 {
 public:
-	/**Starts listening to Pupil Service. Static so It can be called also outside of the Thread Context  */
-	static FPupilMsgWorker* StartListening();
-	/**Stops the Thread and ensures its completion before deleting it*/
-	void StopListening();
 	void SetCalibrationMarker(ACalibrationMarker* MarkerRef, UWorld* World);
 	void UpdateCalibration();
 	Eigen::Matrix3f Rotation_r;
@@ -37,30 +33,25 @@ public:
 	Eigen::Matrix3f GetRotation_L();
 	Eigen::Vector3f GetLocation_R();
 	Eigen::Vector3f GetLocation_L();
-	bool can_gaze = false;
+	bool can_gaze = true;
 	bool CanGaze();
 public:
 	DECLARE_EVENT_OneParam(FPupilMsgWorker, DummyEvent, GazeStruct*);
 	DummyEvent& OnNewData()  { return NewPupilDataEvent; }
-
-private:
 	/** Constructor */
 	FPupilMsgWorker();
 	/** Destructor */
-	~FPupilMsgWorker();
+	virtual ~FPupilMsgWorker() override;
+
+private:
 	/* Begin FRunnable interface */
 	bool Init() override;
 	virtual void Stop() override;
 	virtual uint32 Run() override; 
 	/* End FRunnable interface */
 	/** Makes sure this thread has stopped properly */
-	void EnsureCompletion();
-	/** Shuts down the thread. Static so it can easily be called from outside the thread context */
-	static void Shutdown();
 
 private:
-	/**Static instance variable that ensures the Singleton behavior */
-	static FPupilMsgWorker* Instance;
 	/** Thread to run the worker FRunnable on */
 	FRunnableThread* Thread;
 

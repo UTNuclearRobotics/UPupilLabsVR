@@ -69,8 +69,9 @@ struct pupil {
 };
 
 struct base_data {
-	pupil pupil;
-	MSGPACK_DEFINE_ARRAY(pupil);
+	pupil pupil1;
+	pupil pupil2;
+	MSGPACK_DEFINE_ARRAY(pupil1, pupil2);
 };
 
 struct GazeStruct {

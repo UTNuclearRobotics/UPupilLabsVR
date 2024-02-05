@@ -4,7 +4,6 @@
 
 #include "FPupilMsgWorker.h"
 
-FPupilMsgWorker* FPupilMsgWorker::Instance = nullptr;
 
 /**
  * \brief Thread which connects and receive data from a certain @PupilTopic from Pupil Serice.
@@ -20,7 +19,9 @@ FPupilMsgWorker::FPupilMsgWorker()
  */
 FPupilMsgWorker::~FPupilMsgWorker()
 {
-	if (Thread != nullptr) {
+	UE_LOG(LogTemp, Warning, TEXT("Destructor called"));
+	if (Thread) {
+		Stop();
 		Thread->WaitForCompletion();
 		delete Thread;
 		Thread = nullptr;
@@ -34,8 +35,8 @@ FPupilMsgWorker::~FPupilMsgWorker()
  */
 bool FPupilMsgWorker::Init()
 {
-	UE_LOG(LogTemp, Warning, TEXT("[%s][%d]"), TEXT(__FUNCTION__), __LINE__);
-	return true; //TODO BUILD A ERROR BASED LOG. FALSE IF THE INITIALISATION FAILED//O Metoda ce sa returneze un numar de Eroare sau ceva similar
+	bRunning = true;
+	return true;
 }
 
 /**
@@ -56,11 +57,11 @@ uint32 FPupilMsgWorker::Run()
 		// FDateTime CurrentUETimestamp = FDateTime::UtcNow();
 		// FString write_data = FString::FromInt(CurrentUETimestamp.GetMinute() * 60 + CurrentUETimestamp.GetSecond()) + "." + FString::FromInt(CurrentUETimestamp.GetMillisecond()) + "," + PupilHelper.GetWriteData() + "\n";
 		// FFileHelper::SaveStringToFile(write_data, *(FPaths::ProjectConfigDir() + UTF8TEXT("SaveFileTestPL")), FFileHelper::EEncodingOptions::AutoDetect, &IFileManager::Get(), FILEWRITE_Append);
-		if(PupilHelper.CanGaze()){
+		can_gaze = PupilHelper.CanGaze();
+		if(can_gaze){
 		ReceivedGazeStructure = PupilHelper.GetGazeStructure();
 		Rotation_r = PupilHelper.GetRotation_R();
 		Location_r = PupilHelper.GetLocation_R();
-		can_gaze = PupilHelper.CanGaze();
 		//FDateTime CurrentUETimestamp = FDateTime::UtcNow();
 		//FString write_data = FString::FromInt(CurrentUETimestamp.GetMinute() * 60 + CurrentUETimestamp.GetSecond()) + "." + FString::FromInt(CurrentUETimestamp.GetMillisecond()) + "," + PupilHelper.GetWriteData() + "\n";
 		//FFileHelper::SaveStringToFile(write_data, *(FPaths::ProjectConfigDir() + UTF8TEXT("SaveFileTestPL")), FFileHelper::EEncodingOptions::AutoDetect, &IFileManager::Get(), FILEWRITE_Append);
@@ -68,66 +69,13 @@ uint32 FPupilMsgWorker::Run()
 		NewPupilDataEvent.Broadcast(&ReceivedGazeStructure);
 		}
 	}
-	return 1;
+	return 0;
 }
 
 void FPupilMsgWorker::Stop()
 {
-	Instance->bRunning = false;
-}
-
-void FPupilMsgWorker::EnsureCompletion()
-{
-	Stop();
-	Thread->WaitForCompletion();
-}
-
-void FPupilMsgWorker::Shutdown()
-{
-	if (Instance)
-	{
-		Instance->EnsureCompletion();
-		delete Instance;
-		Instance = nullptr;
-	}
-}
-
-/**
-* \brief This method checks if possible and then starts a Thread and Initializes it.
-* The Initialization also starts the Thread by calling the Run() method.
-* \return Instance of the object containing the Worker Thread
-*/
-FPupilMsgWorker* FPupilMsgWorker::StartListening()
-{
-	//Create new instance of thread if it does not exist
-	//		and the platform supports multi threading!
-	if (!Instance && FPlatformProcess::SupportsMultithreading())
-	{
-		UE_LOG(LogTemp, Warning, TEXT("[%s][%d]"), TEXT(__FUNCTION__), __LINE__);
-		Instance = new FPupilMsgWorker();
-		//Instance->bSuccessfulyInit = Instance->Init();
-		Instance->bRunning = true;
-	}
-	return Instance;
-}
-/*
-mayer's singleton
-widget* getInstance()
-{
-static widget my_only_one;
-return &my_only_one;
-}
-/
-/**
- * \brief Waits and Stops the Thread in the correct way.Stops the process and then destroys the Thread.
- */
-void FPupilMsgWorker::StopListening()
-{
-	if (Thread != nullptr) {
-		Instance->Shutdown();
-		delete Thread;
-		Thread = nullptr;
-	}
+	UE_LOG(LogTemp, Warning, TEXT("Stop Called"));
+	bRunning = false;
 }
 
 void FPupilMsgWorker::SetCalibrationMarker(ACalibrationMarker* MarkerRef, UWorld* World)

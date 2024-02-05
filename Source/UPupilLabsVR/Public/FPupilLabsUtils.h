@@ -60,10 +60,10 @@ public:
 
 	void UpdateCustomCalibration();
 
-	Eigen::Matrix3f Rotation_r;
-	Eigen::Matrix3f Rotation_l;
-	Eigen::Vector3f eye_loc_right;
-	Eigen::Vector3f eye_loc_left;
+	Eigen::Matrix3f Rotation_r = Eigen::Matrix3f::Zero();
+	Eigen::Matrix3f Rotation_l = Eigen::Matrix3f::Zero();
+	Eigen::Vector3f eye_loc_right = Eigen::Vector3f::Zero();
+	Eigen::Vector3f eye_loc_left = Eigen::Vector3f::Zero();
 	Eigen::Matrix3f GetRotation_R();
 	Eigen::Matrix3f GetRotation_L();
 	Eigen::Vector3f GetLocation_R();
@@ -85,8 +85,6 @@ private:
 	Eigen::Matrix3f Wahba(std::vector<Eigen::Vector3f> eyeLines, std::vector<Eigen::Vector3f> headLines); // Performs Wahba's problem calculation
 
 private:
-	bool bCalibrationStarted;
-	bool bCalibrationEnded;
 	int CurrentCalibrationSamples;
 	int SamplesToIgnoreForEyeMovement;
 	const int CurrentCalibrationSamplesPerDepth = 240;
@@ -103,7 +101,7 @@ private:
 	std::vector<Eigen::Vector3f> eyeLoc_left;
 	int calPoints;
 	int IgnoreSamples;
-	bool bCalibrationProgressing;
+	bool bCalibrationProgressing = false;
 	std::vector<FVector> CalibrationLocations;
 	UWorld* WorldRef;
 

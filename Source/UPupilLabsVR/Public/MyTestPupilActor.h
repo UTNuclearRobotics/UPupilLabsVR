@@ -28,6 +28,7 @@ public:
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 	///--BEGIN RAYCAST--///
 	//Method for receiving the GazeStructure for The RayCasting
@@ -36,7 +37,6 @@ protected:
 	GazeStruct* ReceivedGazeStructure;
 	///--END RAYCAST--///
 	UWorld* World;
-	bool canRayCast = false;
 	Eigen::Vector3f Location_r;
 	Eigen::Matrix3f Rotation_r;
 	Eigen::Vector3f Location_l;
@@ -45,11 +45,17 @@ protected:
 	Eigen::Quaternionf q_l;
 
 public:
+	void SendData();
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
-	FPupilMsgWorker* PupilComm;
+	std::unique_ptr<FPupilMsgWorker> PupilComm;
 	UFUNCTION(BlueprintCallable, Category = "Pupil Labs", meta = (Keywords = "Access Gaze Ray"))
 		FUEStruct PupilData();
 	UFUNCTION(BlueprintCallable, Category = "Pupil Labs", meta = (Keywords = "Can Gaze"))
 		bool CanGaze();
+	UFUNCTION(BlueprintCallable, Category = "Pupil Labs", meta = (Keywords = "Start Calibration"))
+		void StartCalibration();
+	DECLARE_EVENT_OneParam(AMyTestPupilActor, DummyEvent, GazeStruct*);
+	DummyEvent& OnNewData() { return NewPupilDataEvent; }
+	DummyEvent NewPupilDataEvent;
 };

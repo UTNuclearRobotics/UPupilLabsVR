@@ -8,17 +8,21 @@ struct FUEStruct
 {
 	GENERATED_BODY()
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Pupil Data")
-	float confidence;
+		float confidence;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Pupil Data")
-	FVector eye_loc_r;
+		FVector eye_loc_r;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Pupil Data")
-	FVector gaze_dir_r;
+		FVector gaze_dir_r;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Pupil Data")
-	FQuat gaze_rot_r;
+		FQuat gaze_rot_r;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Pupil Data")
-	FVector eye_loc_l;
+		float pupil_d_r;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Pupil Data")
-	FVector gaze_dir_l;
+		FVector eye_loc_l;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Pupil Data")
-	FQuat gaze_rot_l;
+		FVector gaze_dir_l;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Pupil Data")
+		FQuat gaze_rot_l;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Pupil Data")
+		float pupil_d_l;
 };

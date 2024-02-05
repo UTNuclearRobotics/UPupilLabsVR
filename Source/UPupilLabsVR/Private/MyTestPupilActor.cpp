@@ -16,19 +16,11 @@ void AMyTestPupilActor::BeginPlay()
 {
 	Super::BeginPlay();
 	UE_LOG(LogTemp, Warning, TEXT("PupilActor>>>>BeginPlay"));
-	//SPAWN PAWN
-	FVector SpawnLocation(1000, 1000, 1000);
-	FRotator SpawnRotation(0.0f, 0.0f, 0.0f);
-	FActorSpawnParameters SpawnParameters = FActorSpawnParameters();
 
-	ACalibrationMarker* CalibrationMarker = GetWorld()->SpawnActor<ACalibrationMarker>(ACalibrationMarker::StaticClass(), SpawnLocation, SpawnRotation, SpawnParameters);
-
-	PupilComm = FPupilMsgWorker::StartListening();
-
-	PupilComm->SetCalibrationMarker(CalibrationMarker, GetWorld());
+	PupilComm = std::make_unique<FPupilMsgWorker>();
+	// PupilComm = FPupilMsgWorker::StartListening();
 
 	PupilComm->OnNewData().AddUObject(this, &AMyTestPupilActor::OnNewPupilData);
-	UE_LOG(LogTemp, Warning, TEXT("[%s][%d]"), TEXT(__FUNCTION__), __LINE__);\
 
 	World = GetWorld();
 }
@@ -37,7 +29,10 @@ void AMyTestPupilActor::BeginPlay()
 void AMyTestPupilActor::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	// PupilComm->UpdateCalibration();
+	if (!PupilComm->CanGaze())
+	{
+		PupilComm->UpdateCalibration();
+	}
 }
 
 void AMyTestPupilActor::OnNewPupilData(GazeStruct* GazeStructure)
@@ -51,7 +46,12 @@ void AMyTestPupilActor::OnNewPupilData(GazeStruct* GazeStructure)
 	Eigen::Quaternionf q_2(Rotation_l);
 	q_r = q_1;
 	q_l = q_2;
-	canRayCast = true;
+	SendData();
+}
+
+void AMyTestPupilActor::SendData()
+{
+	NewPupilDataEvent.Broadcast(ReceivedGazeStructure);
 }
 
 // Change to delegate
@@ -68,11 +68,13 @@ FUEStruct AMyTestPupilActor::PupilData()
 
 	FUEStruct pupilStruct;
 
-	if (canRayCast)
+	if (PupilComm->CanGaze())
 	{
 		if (ReceivedGazeStructure->topic == "gaze.3d.01.")
 		{
 			pupilStruct.confidence = ReceivedGazeStructure->confidence;
+			pupilStruct.pupil_d_r = ReceivedGazeStructure->base_data.pupil1.diameter;
+			pupilStruct.pupil_d_l = ReceivedGazeStructure->base_data.pupil2.diameter;
 			for (std::map<std::string, vector_3d>::iterator it = ReceivedGazeStructure->gaze_normals_3d.begin(); it != ReceivedGazeStructure->gaze_normals_3d.end(); ++it)
 			{
 				std::string eye_d = it->first;
@@ -107,4 +109,22 @@ bool AMyTestPupilActor::CanGaze()
 {
 	bool can_gaze = PupilComm->CanGaze();
 	return can_gaze;
+}
+
+void AMyTestPupilActor::StartCalibration()
+{
+	//SPAWN PAWN
+	FVector SpawnLocation(1000, 1000, 1000);
+	FRotator SpawnRotation(0.0f, 0.0f, 0.0f);
+	FActorSpawnParameters SpawnParameters = FActorSpawnParameters();
+
+	ACalibrationMarker* CalibrationMarker = GetWorld()->SpawnActor<ACalibrationMarker>(ACalibrationMarker::StaticClass(), SpawnLocation, SpawnRotation, SpawnParameters);
+
+	 PupilComm->SetCalibrationMarker(CalibrationMarker, GetWorld());
+}
+
+void AMyTestPupilActor::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	UE_LOG(LogTemp, Warning, TEXT("PupilActor>>>>EndPlay"));
+	Super::EndPlay(EndPlayReason);
 }

@@ -27,23 +27,23 @@ public class UPupilLabsVR : ModuleRules
 
 		LoadEigen();
 
-		PublicIncludePaths.AddRange(
-			new string[] {
-				"UPupilLabsVR/Public"
+        PublicIncludePaths.AddRange(
+            new string[] {
+				Path.Combine(PluginDirectory,"Source/UPupilLabsVR/public"),
 				// ... add public include paths required here ...
 			}
-			);
-				
-		
-		PrivateIncludePaths.AddRange(
-			new string[] {
-				"UPupilLabsVR/Private",
+            );
+
+
+        PrivateIncludePaths.AddRange(
+            new string[] {
+                "UPupilLabsVR/Private",
 				// ... add other private include paths required here ...
 			}
-			);
-			
-		
-		PublicDependencyModuleNames.AddRange(
+            );
+
+
+        PublicDependencyModuleNames.AddRange(
 			new string[]
 			{
 				"Core",
