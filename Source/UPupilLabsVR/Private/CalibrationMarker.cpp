@@ -9,7 +9,7 @@ ACalibrationMarker::ACalibrationMarker()
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-	static ConstructorHelpers::FObjectFinder<UStaticMesh> meshAsset(TEXT("/Game/StarterContent/Shapes/shape_sphere.shape_sphere"));
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> meshAsset(TEXT("/Game/Research/ARGUS/shape_sphere.shape_sphere"));
 
 	if (meshAsset.Succeeded())
 	{
@@ -23,7 +23,7 @@ ACalibrationMarker::ACalibrationMarker()
 		UE_LOG(LogTemp, Warning, TEXT("NoSuccess"));
 	}
 
-	static ConstructorHelpers::FObjectFinder<UMaterialInstance> FoundMaterial(TEXT("/Game/StarterContent/Materials/M_Basic_Wall_Inst.M_Basic_Wall_Inst"));
+	static ConstructorHelpers::FObjectFinder<UMaterialInstance> FoundMaterial(TEXT("/Game/Research/ARGUS/M_Basic_Wall_Inst.M_Basic_Wall_Inst"));
 	if (FoundMaterial.Succeeded())
 	{
 		UMaterialInstanceDynamic* DynamicMaterialInst = UMaterialInstanceDynamic::Create(FoundMaterial.Object, meshName);

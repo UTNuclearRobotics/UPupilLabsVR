@@ -18,6 +18,24 @@ FPupilLabsUtils::FPupilLabsUtils()
 	
    	ReqSocket.close();
 
+	FString temp_string;
+	ReadStringFromProjectConfigFile(*FString("Calibration Results"), *FString("PupilSettings"), *FString("TRANSFORM_RIGHT"), temp_string);
+	GetEigenFromString(temp_string, Rotation_r);
+
+	ReadStringFromProjectConfigFile(*FString("Calibration Results"), *FString("PupilSettings"), *FString("TRANSFORM_LEFT"), temp_string);
+	GetEigenFromString(temp_string, Rotation_l);
+
+	ReadStringFromProjectConfigFile(*FString("Calibration Results"), *FString("PupilSettings"), *FString("LOCATION_RIGHT"), temp_string);
+	GetEigenFromString(temp_string, eye_loc_right);
+
+	ReadStringFromProjectConfigFile(*FString("Calibration Results"), *FString("PupilSettings"), *FString("LOCATION_LEFT"), temp_string);
+	GetEigenFromString(temp_string, eye_loc_left);
+
+	UE_LOG(LogTemp, Warning, TEXT("[%s][%d] : %s"), TEXT(__FUNCTION__), __LINE__, TEXT("Print R"));
+	UE_LOG(LogTemp, Warning, TEXT("Row 1 is: %f, %f, %f"), Rotation_r.coeff(0, 0), Rotation_r.coeff(0, 1), Rotation_r.coeff(0, 2)); // DO NOT DELETE (SAVE FOR REFERENCE)
+	UE_LOG(LogTemp, Warning, TEXT("Row 2 is: %f, %f, %f"), Rotation_r.coeff(1, 0), Rotation_r.coeff(1, 1), Rotation_r.coeff(1, 2));
+	UE_LOG(LogTemp, Warning, TEXT("Row 3 is: %f, %f, %f"), Rotation_r.coeff(2, 0), Rotation_r.coeff(2, 1), Rotation_r.coeff(2, 2));
+
 	//Eigen::Matrix3f test_mat;
 	//test_mat << 0, 0, 1,
 	//	-1, 0, 0,
@@ -25,7 +43,7 @@ FPupilLabsUtils::FPupilLabsUtils()
 	//UE_LOG(LogTemp, Warning, TEXT("[%s][%d] : %s"), TEXT(__FUNCTION__), __LINE__, TEXT("Print R"));
 	//UE_LOG(LogTemp, Warning, TEXT("Row 1 is: %f, %f, %f"), test_mat.coeff(0, 0), test_mat.coeff(0, 1), test_mat.coeff(0, 2)); // DO NOT DELETE (SAVE FOR REFERENCE)
 	//UE_LOG(LogTemp, Warning, TEXT("Row 2 is: %f, %f, %f"), test_mat.coeff(1, 0), test_mat.coeff(1, 1), test_mat.coeff(1, 2));
-	//UE_LOG(LogTemp, Warning, TEXT("Row 3 is: %f, %f, %f"), test_mat.coeff(2, 0), test_mat.coeff(2, 1), test_mat.coeff(2, 2));
+	//UE_LOG(LogTemp, Warning, TEXT("Row 3 is: %f, %f, %f"), test_m<<at.coeff(2, 0), test_mat.coeff(2, 1), test_mat.coeff(2, 2));
 	//Eigen::Quaternionf q(test_mat);
 	//UE_LOG(LogTemp, Warning, TEXT("[%s][%d] : %s"), TEXT(__FUNCTION__), __LINE__, TEXT("Print quat"));
 	//UE_LOG(LogTemp, Warning, TEXT("quat is: %f, %f, %f, %f"), q.x(), q.y(), q.z(), q.w()); // DO NOT DELETE (SAVE FOR REFERENCE)
@@ -46,6 +64,78 @@ FPupilLabsUtils::~FPupilLabsUtils()
 	}
 	ZmqContext = nullptr;
 	SubSocket = nullptr;
+}
+
+bool FPupilLabsUtils::WriteStringToProjectConfigFile(const FString Section, const FString FileName, const FString Key, const FString Value)
+{
+	if (!GConfig) return false;
+
+	FString FullFilePath = FPaths::ProjectConfigDir().Append(*FileName).Append(".ini");
+
+	GConfig->SetString(*Section, *Key, *Value, FullFilePath);
+
+	GConfig->Flush(false, FullFilePath);
+
+	return true;
+}
+
+bool FPupilLabsUtils::ReadStringFromProjectConfigFile(const FString Section, const FString FileName, const FString Key, FString& Value)
+{
+	if (!GConfig) return false;
+
+	FString FullFilePath = FPaths::ProjectConfigDir().Append(*FileName).Append(".ini");
+
+	return GConfig->GetString(*Section, *Key, Value, FullFilePath);
+}
+
+void FPupilLabsUtils::GetEigenFromString(FString InputString, Eigen::Matrix3f ReturnMatrix)
+{
+	std::vector<float> v;
+
+	std::stringstream ss2(TCHAR_TO_UTF8(*InputString));
+
+	while (ss2.good())
+	{
+		std::string substr;
+		getline(ss2, substr, ',');
+		v.push_back(std::stof(substr));
+	}
+
+	ReturnMatrix << v[0], v[1], v[2], v[3], v[4], v[5], v[6], v[7], v[8];
+}
+
+FString FPupilLabsUtils::GetStringFromEigen(Eigen::Matrix3f InputMatrix)
+{
+	Eigen::IOFormat CommaInitFmt(4, 0, ",", ",", "", "", "", "");
+	std::stringstream ss;
+	ss << InputMatrix.format(CommaInitFmt);
+	std::string demo = ss.str();
+	return UTF8_TO_TCHAR(demo.c_str());
+}
+
+FString FPupilLabsUtils::GetStringFromEigen(Eigen::Vector3f InputVector)
+{
+	Eigen::IOFormat CommaInitFmt(4, 0, ",", ",", "", "", "", "");
+	std::stringstream ss;
+	ss << InputVector.format(CommaInitFmt);
+	std::string demo = ss.str();
+	return UTF8_TO_TCHAR(demo.c_str());
+}
+
+void FPupilLabsUtils::GetEigenFromString(FString InputString, Eigen::Vector3f ReturnVector)
+{
+	std::vector<float> v;
+
+	std::stringstream ss2(TCHAR_TO_UTF8(*InputString));
+
+	while (ss2.good())
+	{
+		std::string substr;
+		getline(ss2, substr, ',');
+		v.push_back(std::stof(substr));
+	}
+
+	ReturnVector << v[0], v[1], v[2];
 }
 
 zmq::socket_t FPupilLabsUtils::ConnectToZmqPupilPublisher(const std::string ReqPort) {
@@ -284,7 +374,13 @@ void FPupilLabsUtils::UpdateCustomCalibration()
 				Eigen::Vector3f e_l(-4, -3.15, -1.5);
 				eye_loc_right = e_r;
 				eye_loc_left = e_l;
-         
+
+				FString temp_string = GetStringFromEigen(eye_loc_right);
+				WriteStringToProjectConfigFile(*FString("Calibration Results"), *FString("PupilSettings"), *FString("LOCATION_RIGHT"), *temp_string);
+
+				temp_string = GetStringFromEigen(eye_loc_left);
+				WriteStringToProjectConfigFile(*FString("Calibration Results"), *FString("PupilSettings"), *FString("LOCATION_LEFT"), *temp_string);
+
 				// Calculate Calibration object relative transform to 
                 FTransform HMDTransform = FTransform(HMDorientation, HMDposition+eye_offset_right_ue);
                 static const FQuat Identity;
@@ -325,6 +421,8 @@ void FPupilLabsUtils::UpdateCustomCalibration()
 		{
 			bCalibrationProgressing = false;
 			Rotation_r = Wahba(gazeDir_right, calibrationDirectionHeadsetFrame_right);
+			FString temp_string = GetStringFromEigen(Rotation_r);
+			WriteStringToProjectConfigFile(*FString("Calibration Results"), *FString("PupilSettings"), *FString("TRANSFORM_RIGHT"), *temp_string);
 			Eigen::Quaternionf q(Rotation_r);
 			FRotator UERot = FRotator(FQuat(q.x(), q.y(), q.z(), q.w()));
 			UE_LOG(LogTemp, Warning, TEXT("Vector: %f %f %f"), UERot.Pitch, UERot.Roll, UERot.Yaw);

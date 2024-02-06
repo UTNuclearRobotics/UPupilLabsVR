@@ -74,6 +74,12 @@ public:
 
 
 private:
+	bool WriteStringToProjectConfigFile(const FString Section, const FString FileName, const FString Key, const FString Value);
+	bool ReadStringFromProjectConfigFile(const FString Section, const FString FileName, const FString Key, FString& Value);
+	void GetEigenFromString(FString InputString, Eigen::Matrix3f ReturnMatrix);
+	void GetEigenFromString(FString InputString, Eigen::Vector3f ReturnVector);
+	FString GetStringFromEigen(Eigen::Matrix3f InputMatrix);
+	FString GetStringFromEigen(Eigen::Vector3f InputVector);
 	zmq::socket_t ConnectToZmqPupilPublisher(std::string ReqPort); // Connect to the Response Socket of the Pupil Service using a Request Socket
 	zmq::socket_t* ConnectToSubport(zmq::socket_t* ReqSocket, const std::string Topic); // Connect to the Subport of the Publisher given from the Request Socket
 	std::string ReceiveSubPort(zmq::socket_t *ReqSocket); // Receive and log the SubPort
