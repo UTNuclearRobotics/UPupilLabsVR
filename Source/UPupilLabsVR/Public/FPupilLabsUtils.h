@@ -60,10 +60,10 @@ public:
 
 	void UpdateCustomCalibration();
 
-	Eigen::Matrix3f Rotation_r = Eigen::Matrix3f::Zero();
-	Eigen::Matrix3f Rotation_l = Eigen::Matrix3f::Zero();
-	Eigen::Vector3f eye_loc_right = Eigen::Vector3f::Zero();
-	Eigen::Vector3f eye_loc_left = Eigen::Vector3f::Zero();
+	Eigen::Matrix3f Rotation_r;
+	Eigen::Matrix3f Rotation_l;
+	Eigen::Vector3f eye_loc_right;
+	Eigen::Vector3f eye_loc_left;
 	Eigen::Matrix3f GetRotation_R();
 	Eigen::Matrix3f GetRotation_L();
 	Eigen::Vector3f GetLocation_R();
@@ -76,8 +76,8 @@ public:
 private:
 	bool WriteStringToProjectConfigFile(const FString Section, const FString FileName, const FString Key, const FString Value);
 	bool ReadStringFromProjectConfigFile(const FString Section, const FString FileName, const FString Key, FString& Value);
-	void GetEigenFromString(FString InputString, Eigen::Matrix3f ReturnMatrix);
-	void GetEigenFromString(FString InputString, Eigen::Vector3f ReturnVector);
+	Eigen::Matrix3f GetEigenFromStringM(FString InputString);
+	Eigen::Vector3f GetEigenFromStringV(FString InputString);
 	FString GetStringFromEigen(Eigen::Matrix3f InputMatrix);
 	FString GetStringFromEigen(Eigen::Vector3f InputVector);
 	zmq::socket_t ConnectToZmqPupilPublisher(std::string ReqPort); // Connect to the Response Socket of the Pupil Service using a Request Socket

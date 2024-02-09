@@ -7,6 +7,7 @@
 #include "Misc/Paths.h"
 #include <sstream>
 #include <Runtime/Engine/Classes/Kismet/KismetMathLibrary.h>
+#include "Runtime/Engine/Classes/Kismet/KismetSystemLibrary.h"
 
 FPupilLabsUtils::FPupilLabsUtils()
 {
@@ -20,16 +21,16 @@ FPupilLabsUtils::FPupilLabsUtils()
 
 	FString temp_string;
 	ReadStringFromProjectConfigFile(*FString("Calibration Results"), *FString("PupilSettings"), *FString("TRANSFORM_RIGHT"), temp_string);
-	GetEigenFromString(temp_string, Rotation_r);
+	Rotation_r = GetEigenFromStringM(temp_string);
 
 	ReadStringFromProjectConfigFile(*FString("Calibration Results"), *FString("PupilSettings"), *FString("TRANSFORM_LEFT"), temp_string);
-	GetEigenFromString(temp_string, Rotation_l);
+	Rotation_l = GetEigenFromStringM(temp_string);
 
 	ReadStringFromProjectConfigFile(*FString("Calibration Results"), *FString("PupilSettings"), *FString("LOCATION_RIGHT"), temp_string);
-	GetEigenFromString(temp_string, eye_loc_right);
+	eye_loc_right = GetEigenFromStringV(temp_string);
 
 	ReadStringFromProjectConfigFile(*FString("Calibration Results"), *FString("PupilSettings"), *FString("LOCATION_LEFT"), temp_string);
-	GetEigenFromString(temp_string, eye_loc_left);
+	eye_loc_left = GetEigenFromStringV(temp_string);
 
 	UE_LOG(LogTemp, Warning, TEXT("[%s][%d] : %s"), TEXT(__FUNCTION__), __LINE__, TEXT("Print R"));
 	UE_LOG(LogTemp, Warning, TEXT("Row 1 is: %f, %f, %f"), Rotation_r.coeff(0, 0), Rotation_r.coeff(0, 1), Rotation_r.coeff(0, 2)); // DO NOT DELETE (SAVE FOR REFERENCE)
@@ -88,7 +89,7 @@ bool FPupilLabsUtils::ReadStringFromProjectConfigFile(const FString Section, con
 	return GConfig->GetString(*Section, *Key, Value, FullFilePath);
 }
 
-void FPupilLabsUtils::GetEigenFromString(FString InputString, Eigen::Matrix3f ReturnMatrix)
+Eigen::Matrix3f FPupilLabsUtils::GetEigenFromStringM(FString InputString)
 {
 	std::vector<float> v;
 
@@ -100,8 +101,9 @@ void FPupilLabsUtils::GetEigenFromString(FString InputString, Eigen::Matrix3f Re
 		getline(ss2, substr, ',');
 		v.push_back(std::stof(substr));
 	}
-
+	Eigen::Matrix3f ReturnMatrix;
 	ReturnMatrix << v[0], v[1], v[2], v[3], v[4], v[5], v[6], v[7], v[8];
+	return ReturnMatrix;
 }
 
 FString FPupilLabsUtils::GetStringFromEigen(Eigen::Matrix3f InputMatrix)
@@ -122,7 +124,7 @@ FString FPupilLabsUtils::GetStringFromEigen(Eigen::Vector3f InputVector)
 	return UTF8_TO_TCHAR(demo.c_str());
 }
 
-void FPupilLabsUtils::GetEigenFromString(FString InputString, Eigen::Vector3f ReturnVector)
+Eigen::Vector3f FPupilLabsUtils::GetEigenFromStringV(FString InputString)
 {
 	std::vector<float> v;
 
@@ -134,8 +136,9 @@ void FPupilLabsUtils::GetEigenFromString(FString InputString, Eigen::Vector3f Re
 		getline(ss2, substr, ',');
 		v.push_back(std::stof(substr));
 	}
-
+	Eigen::Vector3f ReturnVector;
 	ReturnVector << v[0], v[1], v[2];
+	return ReturnVector;
 }
 
 zmq::socket_t FPupilLabsUtils::ConnectToZmqPupilPublisher(const std::string ReqPort) {
@@ -283,21 +286,18 @@ void FPupilLabsUtils::CustomCalibration()
 
 	// FVector CalLocation = HMDposition + 75* HMDorientation.RotateVector(FVector(1, 0, 0));
 	FVector position1 = FVector(1, 0, 0);
-	position1.Normalize();
-	FVector position2 = FVector(1, 0.4, 0.4);
-	position2.Normalize();
-	FVector position3 = FVector(1, -0.4, 0.4);
-	position3.Normalize();
-	FVector position4 = FVector(1, 0.4, -0.4);
-	position4.Normalize();
-	FVector position5 = FVector(1, -0.4, -0.4);
-	position5.Normalize();
+	FVector position2 = FVector(0, 10, 10);
+	FVector position3 = FVector(1, -10, 10);
+	FVector position4 = FVector(1, 10, -10);
+	FVector position5 = FVector(1, -10, -10);
 
-	CalibrationLocations.push_back(HMDposition + 75 * HMDlook * position1);
-	CalibrationLocations.push_back(HMDposition + 75 * HMDlook * position2);
-	CalibrationLocations.push_back(HMDposition + 75 * HMDlook * position3);
-	CalibrationLocations.push_back(HMDposition + 75 * HMDlook * position4);
-	CalibrationLocations.push_back(HMDposition + 75 * HMDlook * position5);
+	FVector firstPos = HMDposition + 75 * HMDlook * position1;
+
+	CalibrationLocations.push_back(firstPos);
+	CalibrationLocations.push_back(firstPos + position2);
+	CalibrationLocations.push_back(firstPos + position3);
+	CalibrationLocations.push_back(firstPos + position4);
+	CalibrationLocations.push_back(firstPos + position5);
 
 
 	// Place initial calibration point
@@ -381,11 +381,14 @@ void FPupilLabsUtils::UpdateCustomCalibration()
 				temp_string = GetStringFromEigen(eye_loc_left);
 				WriteStringToProjectConfigFile(*FString("Calibration Results"), *FString("PupilSettings"), *FString("LOCATION_LEFT"), *temp_string);
 
-				// Calculate Calibration object relative transform to 
+				// Calculate Calibration object relative transform to headset
                 FTransform HMDTransform = FTransform(HMDorientation, HMDposition+eye_offset_right_ue);
+				FTransform HMDTransform2 = FTransform(HMDorientation, HMDposition + eye_offset_left_ue);
                 static const FQuat Identity;
                 FTransform CalTransform = FTransform(Identity, CalibrationLocations[calPoints]);
+				FTransform CalTransform2 = FTransform(Identity, CalibrationLocations[calPoints]);
                 FTransform CaltoHMD = UKismetMathLibrary::MakeRelativeTransform(CalTransform, HMDTransform);
+				FTransform CaltoHMD2 = UKismetMathLibrary::MakeRelativeTransform(CalTransform2, HMDTransform2);
 				std::map<std::string, vector_3d> gaze_normals_3d = GazeData.gaze_normals_3d;
 				for (std::map<std::string, vector_3d>::iterator it = gaze_normals_3d.begin(); it != gaze_normals_3d.end(); ++it)
 				{
@@ -403,6 +406,8 @@ void FPupilLabsUtils::UpdateCustomCalibration()
                 // eyeLoc_right.push_back(Eigen::Vector3f(GazeData.eye_center_3d.x * 10, GazeData.eye_center_3d.y * 10, GazeData.eye_center_3d.z * 10));
                 calibrationLocationHeadsetFrame_right.push_back(Eigen::Vector3f(CaltoHMD.GetLocation()[0], CaltoHMD.GetLocation()[1], CaltoHMD.GetLocation()[2]));
                 calibrationDirectionHeadsetFrame_right.push_back(Eigen::Vector3f(CaltoHMD.GetLocation()[0] - (HMDposition[0] + eye_loc_right[0]), (CaltoHMD.GetLocation()[1] - (HMDposition[1] + eye_loc_right[1])), CaltoHMD.GetLocation()[2] - (HMDposition[2] + eye_loc_right[2])).normalized());
+				calibrationLocationHeadsetFrame_left.push_back(Eigen::Vector3f(CaltoHMD2.GetLocation()[0], CaltoHMD2.GetLocation()[1], CaltoHMD2.GetLocation()[2]));
+				calibrationDirectionHeadsetFrame_left.push_back(Eigen::Vector3f(CaltoHMD2.GetLocation()[0] - (HMDposition[0] + eye_loc_left[0]), (CaltoHMD2.GetLocation()[1] - (HMDposition[1] + eye_loc_left[1])), CaltoHMD2.GetLocation()[2] - (HMDposition[2] + eye_loc_left[2])).normalized());
 				CurrentCalibrationSamples++;//Increment the current calibration sample. (Default sample amount per calibration point is 120)
 			}
 			IgnoreSamples++;//Increment the current calibration sample. (Default sample amount per calibration point is 120)
@@ -413,7 +418,12 @@ void FPupilLabsUtils::UpdateCustomCalibration()
 			CurrentCalibrationSamples = 0;
 			IgnoreSamples = 0;
 			calPoints++;
-			CalibrationMarker->SetActorLocation(CalibrationLocations[calPoints]);
+			FLatentActionInfo LatentInfo;
+			LatentInfo.CallbackTarget = CalibrationMarker;
+			UKismetSystemLibrary::MoveComponentTo(CalibrationMarker->meshName, CalibrationLocations[calPoints],
+				FRotator(0), false, false, 0.5f, true,
+				EMoveComponentAction::Type::Move, LatentInfo);
+			// CalibrationMarker->SetActorLocation(CalibrationLocations[calPoints]);
 			UE_LOG(LogTemp, Warning, TEXT("[%s][%d] : %s"), TEXT(__FUNCTION__), __LINE__, TEXT("MoveCalActor"));
 		}
 
@@ -421,8 +431,11 @@ void FPupilLabsUtils::UpdateCustomCalibration()
 		{
 			bCalibrationProgressing = false;
 			Rotation_r = Wahba(gazeDir_right, calibrationDirectionHeadsetFrame_right);
+			Rotation_l = Wahba(gazeDir_left, calibrationDirectionHeadsetFrame_left);
 			FString temp_string = GetStringFromEigen(Rotation_r);
 			WriteStringToProjectConfigFile(*FString("Calibration Results"), *FString("PupilSettings"), *FString("TRANSFORM_RIGHT"), *temp_string);
+			temp_string = GetStringFromEigen(Rotation_l);
+			WriteStringToProjectConfigFile(*FString("Calibration Results"), *FString("PupilSettings"), *FString("TRANSFORM_LEFT"), *temp_string);
 			Eigen::Quaternionf q(Rotation_r);
 			FRotator UERot = FRotator(FQuat(q.x(), q.y(), q.z(), q.w()));
 			UE_LOG(LogTemp, Warning, TEXT("Vector: %f %f %f"), UERot.Pitch, UERot.Roll, UERot.Yaw);

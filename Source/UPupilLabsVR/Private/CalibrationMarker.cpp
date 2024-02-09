@@ -16,7 +16,7 @@ ACalibrationMarker::ACalibrationMarker()
 		UE_LOG(LogTemp, Warning, TEXT("Success"));
 		meshName->SetStaticMesh(meshAsset.Object);
 		meshName->SetRelativeLocation(FVector(0.0f, 0.0f, 0.0f));
-		meshName->SetWorldScale3D(FVector(0.05f));
+		meshName->SetWorldScale3D(FVector(0.02f));
 	}
 	else
 	{
