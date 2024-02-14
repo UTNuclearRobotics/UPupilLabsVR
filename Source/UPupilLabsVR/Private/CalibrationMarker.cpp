@@ -23,7 +23,7 @@ ACalibrationMarker::ACalibrationMarker()
 		UE_LOG(LogTemp, Warning, TEXT("NoSuccess"));
 	}
 
-	static ConstructorHelpers::FObjectFinder<UMaterialInstance> FoundMaterial(TEXT("/Game/Research/ARGUS/M_Basic_Wall_Inst.M_Basic_Wall_Inst"));
+	static ConstructorHelpers::FObjectFinder<UMaterialInstance> FoundMaterial(TEXT("/Game/Research/ARGUS/M_Cal_Object_Inst.M_Cal_Object_Inst"));
 	if (FoundMaterial.Succeeded())
 	{
 		UMaterialInstanceDynamic* DynamicMaterialInst = UMaterialInstanceDynamic::Create(FoundMaterial.Object, meshName);

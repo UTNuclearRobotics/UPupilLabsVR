@@ -9,12 +9,13 @@
 #include "Engine/Engine.h"
 #include "FPupilMsgWorker.h"
 #include "UEStruct.h"
+#include "GazeStruct.h"
 #include "CalibrationMarker.h"
 #include "DrawDebugHelpers.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "MyTestPupilActor.generated.h"
 
-
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FPupilDelegate, FUEStruct, GazeData);
 
 UCLASS()
 class UPUPILLABSVR_API AMyTestPupilActor : public AActor
@@ -45,7 +46,6 @@ protected:
 	Eigen::Quaternionf q_l;
 
 public:
-	void SendData();
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 	std::unique_ptr<FPupilMsgWorker> PupilComm;
@@ -55,7 +55,10 @@ public:
 		bool CanGaze();
 	UFUNCTION(BlueprintCallable, Category = "Pupil Labs", meta = (Keywords = "Start Calibration"))
 		void StartCalibration();
-	DECLARE_EVENT_OneParam(AMyTestPupilActor, DummyEvent, GazeStruct*);
-	DummyEvent& OnNewData() { return NewPupilDataEvent; }
-	DummyEvent NewPupilDataEvent;
+	//DummyEvent& OnNewData() { return NewPupilDataEvent; }
+	//DummyEvent NewPupilDataEvent;
+	UPROPERTY(BlueprintAssignable)
+		FPupilDelegate PupilDelegate;
+	//DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FExampleDelegate_OnSomething, GazeStruct*, _exampleEventParameter);
+	void SendData();
 };

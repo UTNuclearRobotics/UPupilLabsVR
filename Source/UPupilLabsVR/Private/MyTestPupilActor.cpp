@@ -22,6 +22,8 @@ void AMyTestPupilActor::BeginPlay()
 
 	PupilComm->OnNewData().AddUObject(this, &AMyTestPupilActor::OnNewPupilData);
 
+	// OnTestDelegate.AddDynamic(this, &AMyTestPupilActor::SendData);
+
 	World = GetWorld();
 }
 
@@ -51,8 +53,46 @@ void AMyTestPupilActor::OnNewPupilData(GazeStruct* GazeStructure)
 
 void AMyTestPupilActor::SendData()
 {
-	NewPupilDataEvent.Broadcast(ReceivedGazeStructure);
+	FUEStruct pupilStruct;
+
+	if (PupilComm->CanGaze())
+	{
+		if (ReceivedGazeStructure->topic == "gaze.3d.01.")
+		{
+			pupilStruct.confidence = ReceivedGazeStructure->confidence;
+			pupilStruct.pupil_d_r = ReceivedGazeStructure->base_data.pupil1.diameter;
+			pupilStruct.pupil_d_l = ReceivedGazeStructure->base_data.pupil2.diameter;
+			for (std::map<std::string, vector_3d>::iterator it = ReceivedGazeStructure->gaze_normals_3d.begin(); it != ReceivedGazeStructure->gaze_normals_3d.end(); ++it)
+			{
+				std::string eye_d = it->first;
+				vector_3d eye_vec = it->second;
+				if (it->first == "0")
+				{
+					pupilStruct.eye_loc_r.X = Location_r.x();
+					pupilStruct.eye_loc_r.Y = Location_r.y();
+					pupilStruct.eye_loc_r.Z = Location_r.z();
+					pupilStruct.gaze_dir_r.X = it->second.x;
+					pupilStruct.gaze_dir_r.Y = it->second.y;
+					pupilStruct.gaze_dir_r.Z = it->second.z;
+					pupilStruct.gaze_rot_r = FQuat(q_r.x(), q_r.y(), q_r.z(), q_r.w());
+				}
+				else if (it->first == "1")
+				{
+					pupilStruct.eye_loc_l.X = Location_l.x();
+					pupilStruct.eye_loc_l.Y = Location_l.y();
+					pupilStruct.eye_loc_l.Z = Location_l.z();
+					pupilStruct.gaze_dir_l.X = it->second.x;
+					pupilStruct.gaze_dir_l.Y = it->second.y;
+					pupilStruct.gaze_dir_l.Z = it->second.z;
+					pupilStruct.gaze_rot_l = FQuat(q_l.x(), q_l.y(), q_l.z(), q_l.w());
+				}
+			}
+		}
+	}
+	PupilDelegate.Broadcast(pupilStruct);
 }
+
+// TODO fix MyRobofleetPupilPublisher
 
 // Change to delegate
 // Create a local copy of the latest data received

@@ -349,6 +349,19 @@ void FPupilLabsUtils::SetCalibrationMarker(ACalibrationMarker* MarkerRef, UWorld
 	InitializeCalibration();
 }
 
+float FPupilLabsUtils::MatrixNorm(Eigen::Matrix3f Matrix1, Eigen::Matrix3f Matrix2)
+{
+	float varSum = 0;
+	for (int i = 0; i < 3; i++)
+	{
+		for (int j = 0; j < 3; j++)
+		{
+			varSum = varSum + pow(Matrix1.coeff(i, j) - Matrix2.coeff(i, j), 2);
+		}
+	}
+	return varSum;
+}
+
 void FPupilLabsUtils::UpdateCustomCalibration()
 {
 	// Update custom calibration as data is collected
@@ -372,6 +385,10 @@ void FPupilLabsUtils::UpdateCustomCalibration()
 				FVector eye_offset_left_ue(-4, -3.15, -1.5);
 				Eigen::Vector3f e_r(-4, 3.15, -1.5);
 				Eigen::Vector3f e_l(-4, -3.15, -1.5);
+				//FVector eye_offset_right_ue(0, 0, 0);
+				//FVector eye_offset_left_ue(0, 0, 0);
+				//Eigen::Vector3f e_r(0, 0, 0);
+				//Eigen::Vector3f e_l(0, 0, 0);
 				eye_loc_right = e_r;
 				eye_loc_left = e_l;
 
@@ -436,6 +453,7 @@ void FPupilLabsUtils::UpdateCustomCalibration()
 			WriteStringToProjectConfigFile(*FString("Calibration Results"), *FString("PupilSettings"), *FString("TRANSFORM_RIGHT"), *temp_string);
 			temp_string = GetStringFromEigen(Rotation_l);
 			WriteStringToProjectConfigFile(*FString("Calibration Results"), *FString("PupilSettings"), *FString("TRANSFORM_LEFT"), *temp_string);
+			UE_LOG(LogTemp, Warning, TEXT("Matrix Norm: %f"), MatrixNorm(Rotation_r, Rotation_l));
 			Eigen::Quaternionf q(Rotation_r);
 			FRotator UERot = FRotator(FQuat(q.x(), q.y(), q.z(), q.w()));
 			UE_LOG(LogTemp, Warning, TEXT("Vector: %f %f %f"), UERot.Pitch, UERot.Roll, UERot.Yaw);

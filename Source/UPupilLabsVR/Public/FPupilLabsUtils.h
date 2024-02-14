@@ -110,6 +110,7 @@ private:
 	bool bCalibrationProgressing = false;
 	std::vector<FVector> CalibrationLocations;
 	UWorld* WorldRef;
+	float MatrixNorm(Eigen::Matrix3f Matrix1, Eigen::Matrix3f Matrix2);
 
 	// Parameters for connecting to PL
 	std::string Addr = "tcp://127.0.0.1:";
