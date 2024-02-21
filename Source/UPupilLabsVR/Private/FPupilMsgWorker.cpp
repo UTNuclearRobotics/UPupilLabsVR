@@ -78,9 +78,9 @@ void FPupilMsgWorker::Stop()
 	bRunning = false;
 }
 
-void FPupilMsgWorker::SetCalibrationMarker(ACalibrationMarker* MarkerRef, UWorld* World)
+void FPupilMsgWorker::SetCalibrationMarker(ACalibrationMarker* MarkerRef, UWorld* World, FVector Pos1, FVector Pos2, FVector Pos3, FVector Pos4, FVector Pos5)
 {
-	PupilHelper.SetCalibrationMarker(MarkerRef, World);
+	PupilHelper.SetCalibrationMarker(MarkerRef, World, Pos1, Pos2, Pos3, Pos4, Pos5);
 }
 
 void OnNewData()

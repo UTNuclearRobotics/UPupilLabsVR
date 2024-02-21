@@ -56,7 +56,7 @@ public:
 
 
 	ACalibrationMarker* CalibrationMarker;
-	void SetCalibrationMarker(ACalibrationMarker* MarkerRef, UWorld* World);
+	void SetCalibrationMarker(ACalibrationMarker* MarkerRef, UWorld* World, FVector Pos1, FVector Pos2, FVector Pos3, FVector Pos4, FVector Pos5);
 
 	void UpdateCustomCalibration();
 

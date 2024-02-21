@@ -15,8 +15,6 @@
 #include "Kismet/KismetSystemLibrary.h"
 #include "MyTestPupilActor.generated.h"
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FPupilDelegate, FUEStruct, GazeData);
-
 UCLASS()
 class UPUPILLABSVR_API AMyTestPupilActor : public AActor
 {
@@ -54,11 +52,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Pupil Labs", meta = (Keywords = "Can Gaze"))
 		bool CanGaze();
 	UFUNCTION(BlueprintCallable, Category = "Pupil Labs", meta = (Keywords = "Start Calibration"))
-		void StartCalibration();
-	//DummyEvent& OnNewData() { return NewPupilDataEvent; }
-	//DummyEvent NewPupilDataEvent;
-	UPROPERTY(BlueprintAssignable)
-		FPupilDelegate PupilDelegate;
-	//DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FExampleDelegate_OnSomething, GazeStruct*, _exampleEventParameter);
+		void StartCalibration(FVector Pos1, FVector Pos2, FVector Pos3, FVector Pos4, FVector Pos5);
+	DECLARE_EVENT_OneParam(AMyTestPupilActor, DummyEvent, FUEStruct)
+	DummyEvent& OnNewData() { return NewPupilDataEvent; }
+	DummyEvent NewPupilDataEvent;
 	void SendData();
 };

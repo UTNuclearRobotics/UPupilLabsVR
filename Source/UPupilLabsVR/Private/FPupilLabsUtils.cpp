@@ -278,28 +278,6 @@ void FPupilLabsUtils::SaveData(FString SaveText)
 
 void FPupilLabsUtils::CustomCalibration()
 {
-	// Set calibration locations
-	APlayerCameraManager* camManager = WorldRef->GetFirstPlayerController()->PlayerCameraManager;
-	FVector HMDposition = camManager->GetCameraLocation();
-	FVector HMDlook = camManager->GetActorForwardVector();
-	FQuat HMDorientation = camManager->GetCameraRotation().Quaternion();
-
-	// FVector CalLocation = HMDposition + 75* HMDorientation.RotateVector(FVector(1, 0, 0));
-	FVector position1 = FVector(1, 0, 0);
-	FVector position2 = FVector(0, 10, 10);
-	FVector position3 = FVector(1, -10, 10);
-	FVector position4 = FVector(1, 10, -10);
-	FVector position5 = FVector(1, -10, -10);
-
-	FVector firstPos = HMDposition + 75 * HMDlook * position1;
-
-	CalibrationLocations.push_back(firstPos);
-	CalibrationLocations.push_back(firstPos + position2);
-	CalibrationLocations.push_back(firstPos + position3);
-	CalibrationLocations.push_back(firstPos + position4);
-	CalibrationLocations.push_back(firstPos + position5);
-
-
 	// Place initial calibration point
 	calPoints = 0;
 	IgnoreSamples = 0;
@@ -340,12 +318,18 @@ Eigen::Matrix3f FPupilLabsUtils::Wahba(std::vector<Eigen::Vector3f> eyeLines, st
 	return R;
 }
 
-void FPupilLabsUtils::SetCalibrationMarker(ACalibrationMarker* MarkerRef, UWorld* World)
+void FPupilLabsUtils::SetCalibrationMarker(ACalibrationMarker* MarkerRef, UWorld* World, FVector Pos1, FVector Pos2, FVector Pos3, FVector Pos4, FVector Pos5)
 {
 	// Assign calibration marker through MyTestPupilActor
 	UE_LOG(LogTemp, Warning, TEXT("[%s][%d] : %s"), TEXT(__FUNCTION__), __LINE__, TEXT("Initializing Calibration"));
 	CalibrationMarker = MarkerRef;
 	WorldRef = World;
+
+	CalibrationLocations.push_back(Pos1);
+	CalibrationLocations.push_back(Pos2);
+	CalibrationLocations.push_back(Pos3);
+	CalibrationLocations.push_back(Pos4);
+	CalibrationLocations.push_back(Pos5);
 	InitializeCalibration();
 }
 

@@ -89,14 +89,9 @@ void AMyTestPupilActor::SendData()
 			}
 		}
 	}
-	PupilDelegate.Broadcast(pupilStruct);
+	NewPupilDataEvent.Broadcast(pupilStruct);
 }
 
-// TODO fix MyRobofleetPupilPublisher
-
-// Change to delegate
-// Create a local copy of the latest data received
-// Avoid dynamic memory allocation
 FUEStruct AMyTestPupilActor::PupilData()
 {
 	//Eigen::Vector3f Location_r = PupilComm->GetLocation_R();
@@ -151,7 +146,7 @@ bool AMyTestPupilActor::CanGaze()
 	return can_gaze;
 }
 
-void AMyTestPupilActor::StartCalibration()
+void AMyTestPupilActor::StartCalibration(FVector Pos1, FVector Pos2, FVector Pos3, FVector Pos4, FVector Pos5)
 {
 	//SPAWN PAWN
 	FVector SpawnLocation(1000, 1000, 1000);
@@ -160,7 +155,7 @@ void AMyTestPupilActor::StartCalibration()
 
 	ACalibrationMarker* CalibrationMarker = GetWorld()->SpawnActor<ACalibrationMarker>(ACalibrationMarker::StaticClass(), SpawnLocation, SpawnRotation, SpawnParameters);
 
-	 PupilComm->SetCalibrationMarker(CalibrationMarker, GetWorld());
+	 PupilComm->SetCalibrationMarker(CalibrationMarker, GetWorld(), Pos1, Pos2, Pos3, Pos4, Pos5);
 }
 
 void AMyTestPupilActor::EndPlay(const EEndPlayReason::Type EndPlayReason)
