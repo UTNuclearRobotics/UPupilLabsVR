@@ -50,8 +50,8 @@ public class UPupilLabsVR : ModuleRules
                 "CoreUObject",
                 "Engine",
                 "libzmq",
-                "msgpack",
 				"EyeTracker",
+                "msgpack",
                 "Projects"
 				// ... add other public dependencies that you statically link with here ...
 			}

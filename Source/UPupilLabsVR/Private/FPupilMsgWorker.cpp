@@ -58,15 +58,20 @@ uint32 FPupilMsgWorker::Run()
 		// FString write_data = FString::FromInt(CurrentUETimestamp.GetMinute() * 60 + CurrentUETimestamp.GetSecond()) + "." + FString::FromInt(CurrentUETimestamp.GetMillisecond()) + "," + PupilHelper.GetWriteData() + "\n";
 		// FFileHelper::SaveStringToFile(write_data, *(FPaths::ProjectConfigDir() + UTF8TEXT("SaveFileTestPL")), FFileHelper::EEncodingOptions::AutoDetect, &IFileManager::Get(), FILEWRITE_Append);
 		can_gaze = PupilHelper.CanGaze();
-		if(can_gaze){
-		ReceivedGazeStructure = PupilHelper.GetGazeStructure();
-		Rotation_r = PupilHelper.GetRotation_R();
-		Location_r = PupilHelper.GetLocation_R();
-		//FDateTime CurrentUETimestamp = FDateTime::UtcNow();
-		//FString write_data = FString::FromInt(CurrentUETimestamp.GetMinute() * 60 + CurrentUETimestamp.GetSecond()) + "." + FString::FromInt(CurrentUETimestamp.GetMillisecond()) + "," + PupilHelper.GetWriteData() + "\n";
-		//FFileHelper::SaveStringToFile(write_data, *(FPaths::ProjectConfigDir() + UTF8TEXT("SaveFileTestPL")), FFileHelper::EEncodingOptions::AutoDetect, &IFileManager::Get(), FILEWRITE_Append);
-		//GazeStruct ReceivedGazeStruct;
-		NewPupilDataEvent.Broadcast(&ReceivedGazeStructure);
+		if(can_gaze)
+		{
+			GazeStruct GazeData = PupilHelper.GetGazeStructure();
+			//UE_LOG(LogTemp, Warning, TEXT("WorkerRunning"));
+			Rotation_r = PupilHelper.GetRotation_R();
+			Location_r = PupilHelper.GetLocation_R();
+			//FDateTime CurrentUETimestamp = FDateTime::UtcNow();
+			//FString write_data = FString::FromInt(CurrentUETimestamp.GetMinute() * 60 + CurrentUETimestamp.GetSecond()) + "." + FString::FromInt(CurrentUETimestamp.GetMillisecond()) + "," + PupilHelper.GetWriteData() + "\n";
+			//FFileHelper::SaveStringToFile(write_data, *(FPaths::ProjectConfigDir() + UTF8TEXT("SaveFileTestPL")), FFileHelper::EEncodingOptions::AutoDetect, &IFileManager::Get(), FILEWRITE_Append);
+			//GazeStruct ReceivedGazeStruct;
+			//UE_LOG(LogTemp, Warning, TEXT("MessageReceived"));
+			FString test(GazeData.topic.c_str());
+			UE_LOG(LogTemp, Warning, TEXT("%s"), *test);
+			NewPupilDataEvent.Broadcast(&GazeData);
 		}
 	}
 	return 0;
@@ -74,7 +79,7 @@ uint32 FPupilMsgWorker::Run()
 
 void FPupilMsgWorker::Stop()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Stop Called"));
+	UE_LOG(LogTemp, Warning, TEXT("Stop Called Worker"));
 	bRunning = false;
 }
 

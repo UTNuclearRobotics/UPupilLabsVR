@@ -43,6 +43,7 @@ public:
 	FPupilLabsUtils();
 	// Destructor
 	~FPupilLabsUtils();
+
 	// Public Method accesible by the Worker Thread to get Gaze Structure Data
 	GazeStruct GetGazeStructure();
 
@@ -53,7 +54,6 @@ public:
 
 	bool CanGaze();
 	bool can_gaze = false;
-
 
 	ACalibrationMarker* CalibrationMarker;
 	void SetCalibrationMarker(ACalibrationMarker* MarkerRef, UWorld* World, FVector Pos1, FVector Pos2, FVector Pos3, FVector Pos4, FVector Pos5);
@@ -111,7 +111,6 @@ private:
 	std::vector<FVector> CalibrationLocations;
 	UWorld* WorldRef;
 	float MatrixNorm(Eigen::Matrix3f Matrix1, Eigen::Matrix3f Matrix2);
-
 	// Parameters for connecting to PL
 	std::string Addr = "tcp://127.0.0.1:";
 	std::string Port = "50020";

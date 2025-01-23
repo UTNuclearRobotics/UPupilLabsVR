@@ -77,8 +77,8 @@ struct base_data {
 struct GazeStruct {
 	eye_center_3d eye_center_3d;
 	gaze_normal_3d gaze_normal_3d;
-	std::map<std::string, vector_3d> eye_centers_3d;
-	std::map<std::string, vector_3d> gaze_normals_3d;
+	std::map<int, vector_3d> eye_centers_3d;
+	std::map<int, vector_3d> gaze_normals_3d;
 	std::string topic;
 	norm_pos norm_pos;
 	base_data base_data;

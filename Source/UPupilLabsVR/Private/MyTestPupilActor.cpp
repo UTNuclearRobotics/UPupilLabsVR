@@ -31,9 +31,14 @@ void AMyTestPupilActor::BeginPlay()
 void AMyTestPupilActor::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	//UE_LOG(LogTemp, Warning, TEXT("MTPA tick"));
 	if (!PupilComm->CanGaze())
 	{
 		PupilComm->UpdateCalibration();
+	}
+	else
+	{
+		//UE_LOG(LogTemp, Warning, TEXT("GazeTrue"));
 	}
 }
 
@@ -48,25 +53,28 @@ void AMyTestPupilActor::OnNewPupilData(GazeStruct* GazeStructure)
 	Eigen::Quaternionf q_2(Rotation_l);
 	q_r = q_1;
 	q_l = q_2;
+	// UE_LOG(LogTemp, Warning, TEXT("Confidence %f "), GazeStructure->base_data.pupil1.diameter);
 	SendData();
 }
 
 void AMyTestPupilActor::SendData()
 {
 	FUEStruct pupilStruct;
-
 	if (PupilComm->CanGaze())
 	{
+		//FString test(ReceivedGazeStructure->topic.c_str());
+		//FString test2(*FString(ReceivedGazeStructure->topic.c_str()));
+		//UE_LOG(LogTemp, Warning, TEXT("%s"), *test);
 		if (ReceivedGazeStructure->topic == "gaze.3d.01.")
 		{
 			pupilStruct.confidence = ReceivedGazeStructure->confidence;
 			pupilStruct.pupil_d_r = ReceivedGazeStructure->base_data.pupil1.diameter;
 			pupilStruct.pupil_d_l = ReceivedGazeStructure->base_data.pupil2.diameter;
-			for (std::map<std::string, vector_3d>::iterator it = ReceivedGazeStructure->gaze_normals_3d.begin(); it != ReceivedGazeStructure->gaze_normals_3d.end(); ++it)
+			for (std::map<int, vector_3d>::iterator it = ReceivedGazeStructure->gaze_normals_3d.begin(); it != ReceivedGazeStructure->gaze_normals_3d.end(); ++it)
 			{
-				std::string eye_d = it->first;
+				int eye_d = it->first;
 				vector_3d eye_vec = it->second;
-				if (it->first == "0")
+				if (it->first == 0)
 				{
 					pupilStruct.eye_loc_r.X = Location_r.x();
 					pupilStruct.eye_loc_r.Y = Location_r.y();
@@ -76,7 +84,7 @@ void AMyTestPupilActor::SendData()
 					pupilStruct.gaze_dir_r.Z = it->second.z;
 					pupilStruct.gaze_rot_r = FQuat(q_r.x(), q_r.y(), q_r.z(), q_r.w());
 				}
-				else if (it->first == "1")
+				else if (it->first == 1)
 				{
 					pupilStruct.eye_loc_l.X = Location_l.x();
 					pupilStruct.eye_loc_l.Y = Location_l.y();
@@ -103,40 +111,42 @@ FUEStruct AMyTestPupilActor::PupilData()
 
 	FUEStruct pupilStruct;
 
-	if (PupilComm->CanGaze())
-	{
-		if (ReceivedGazeStructure->topic == "gaze.3d.01.")
-		{
-			pupilStruct.confidence = ReceivedGazeStructure->confidence;
-			pupilStruct.pupil_d_r = ReceivedGazeStructure->base_data.pupil1.diameter;
-			pupilStruct.pupil_d_l = ReceivedGazeStructure->base_data.pupil2.diameter;
-			for (std::map<std::string, vector_3d>::iterator it = ReceivedGazeStructure->gaze_normals_3d.begin(); it != ReceivedGazeStructure->gaze_normals_3d.end(); ++it)
-			{
-				std::string eye_d = it->first;
-				vector_3d eye_vec = it->second;
-				if (it->first == "0")
-				{
-					pupilStruct.eye_loc_r.X = Location_r.x();
-					pupilStruct.eye_loc_r.Y = Location_r.y();
-					pupilStruct.eye_loc_r.Z = Location_r.z();
-					pupilStruct.gaze_dir_r.X = it->second.x;
-					pupilStruct.gaze_dir_r.Y = it->second.y;
-					pupilStruct.gaze_dir_r.Z = it->second.z;
-					pupilStruct.gaze_rot_r = FQuat(q_r.x(), q_r.y(), q_r.z(), q_r.w());
-				}
-				else if (it->first == "1")
-				{
-					pupilStruct.eye_loc_l.X = Location_l.x();
-					pupilStruct.eye_loc_l.Y = Location_l.y();
-					pupilStruct.eye_loc_l.Z = Location_l.z();
-					pupilStruct.gaze_dir_l.X = it->second.x;
-					pupilStruct.gaze_dir_l.Y = it->second.y;
-					pupilStruct.gaze_dir_l.Z = it->second.z;
-					pupilStruct.gaze_rot_l = FQuat(q_l.x(), q_l.y(), q_l.z(), q_l.w());
-				}
-			}
-		}
-	}
+	//if (PupilComm->CanGaze())
+	//{
+	//	if (ReceivedGazeStructure->topic == "gaze.3d.01.")
+	//	{
+	//		//UE_LOG(LogTemp, Warning, TEXT("MTPAnewdata"));
+	//		//FUEStruct pupilStruct;
+	//		pupilStruct.confidence = ReceivedGazeStructure->confidence;
+	//		pupilStruct.pupil_d_r = ReceivedGazeStructure->base_data.pupil1.diameter;
+	//		pupilStruct.pupil_d_l = ReceivedGazeStructure->base_data.pupil2.diameter;
+	//		for (std::map<std::string, vector_3d>::iterator it = ReceivedGazeStructure->gaze_normals_3d.begin(); it != ReceivedGazeStructure->gaze_normals_3d.end(); ++it)
+	//		{
+	//			std::string eye_d = it->first;
+	//			vector_3d eye_vec = it->second;
+	//			if (it->first == "0")
+	//			{
+	//				pupilStruct.eye_loc_r.X = Location_r.x();
+	//				pupilStruct.eye_loc_r.Y = Location_r.y();
+	//				pupilStruct.eye_loc_r.Z = Location_r.z();
+	//				pupilStruct.gaze_dir_r.X = it->second.x;
+	//				pupilStruct.gaze_dir_r.Y = it->second.y;
+	//				pupilStruct.gaze_dir_r.Z = it->second.z;
+	//				pupilStruct.gaze_rot_r = FQuat(q_r.x(), q_r.y(), q_r.z(), q_r.w());
+	//			}
+	//			else if (it->first == "1")
+	//			{
+	//				pupilStruct.eye_loc_l.X = Location_l.x();
+	//				pupilStruct.eye_loc_l.Y = Location_l.y();
+	//				pupilStruct.eye_loc_l.Z = Location_l.z();
+	//				pupilStruct.gaze_dir_l.X = it->second.x;
+	//				pupilStruct.gaze_dir_l.Y = it->second.y;
+	//				pupilStruct.gaze_dir_l.Z = it->second.z;
+	//				pupilStruct.gaze_rot_l = FQuat(q_l.x(), q_l.y(), q_l.z(), q_l.w());
+	//			}
+	//		}
+	//	}
+	//}
 	return pupilStruct;
 }
 

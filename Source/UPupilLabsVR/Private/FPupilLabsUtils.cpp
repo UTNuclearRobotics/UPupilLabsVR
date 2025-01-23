@@ -58,6 +58,7 @@ FPupilLabsUtils::FPupilLabsUtils()
 FPupilLabsUtils::~FPupilLabsUtils()
 {
 	// Close the subsocket
+	//UE_LOG(LogTemp, Warning, TEXT("Stop Called Utils"));
 	ZmqContext->close();
 	if (!bSubSocketClosed)
 	{
@@ -172,6 +173,7 @@ zmq::socket_t* FPupilLabsUtils::ConnectToSubport(zmq::socket_t *ReqSocket,const 
 GazeStruct FPupilLabsUtils::ConvertMsgPackToGazeStruct(zmq::message_t info)
 {
 	// Convert Pupil data to the Gaze Struct
+	//UE_LOG(LogTemp, Warning, TEXT("Msg received"));
 	char* payload = static_cast<char*>(info.data());
 	msgpack::object_handle oh = msgpack::unpack(payload, info.size());
 	msgpack::object deserialized = oh.get();
@@ -180,9 +182,12 @@ GazeStruct FPupilLabsUtils::ConvertMsgPackToGazeStruct(zmq::message_t info)
 	std::stringstream ss;
 	ss << deserialized;
 	std::string demo = ss.str();
+	//data_to_write = UTF8_TO_TCHAR(demo.c_str());
+	//SaveData(data_to_write);
 	deserialized.convert(ReceivedGazeStruct);
-	data_to_write = UTF8_TO_TCHAR(demo.c_str());
-	// SaveData(SaveText);
+	//UE_LOG(LogTemp, Warning, TEXT("Confidence %f "), ReceivedGazeStruct.confidence);
+	//UE_LOG(LogTemp, Warning, TEXT(ReceivedGazeStruct.topic);
+	//UE_LOG(LogTemp, Warning, TEXT("Confidence %f "), ReceivedGazeStruct.id);
 	return ReceivedGazeStruct;
 }
 
@@ -237,6 +242,7 @@ GazeStruct FPupilLabsUtils::GetGazeStructure()
 	zmq::message_t info;
 	SubSocket->recv(&info);
 	GazeStruct ReceivedGazeStruct = ConvertMsgPackToGazeStruct(std::move(info));
+	//UE_LOG(LogTemp, Warning, TEXT("MessageReceived"));
 	return ReceivedGazeStruct;
 }
 
@@ -330,6 +336,11 @@ void FPupilLabsUtils::SetCalibrationMarker(ACalibrationMarker* MarkerRef, UWorld
 	CalibrationLocations.push_back(Pos3);
 	CalibrationLocations.push_back(Pos4);
 	CalibrationLocations.push_back(Pos5);
+	UE_LOG(LogTemp, Warning, TEXT("Pos 1 is: %f, %f, %f"), Pos1.X, Pos1.Y, Pos1.Z);
+	UE_LOG(LogTemp, Warning, TEXT("Pos 2 is: %f, %f, %f"), Pos2.X, Pos2.Y, Pos2.Z);
+	UE_LOG(LogTemp, Warning, TEXT("Pos 3 is: %f, %f, %f"), Pos3.X, Pos3.Y, Pos3.Z);
+	UE_LOG(LogTemp, Warning, TEXT("Pos 4 is: %f, %f, %f"), Pos4.X, Pos4.Y, Pos4.Z);
+	UE_LOG(LogTemp, Warning, TEXT("Pos 5 is: %f, %f, %f"), Pos5.X, Pos5.Y, Pos5.Z);
 	InitializeCalibration();
 }
 
@@ -353,96 +364,96 @@ void FPupilLabsUtils::UpdateCustomCalibration()
 	if (bCalibrationProgressing)
 	{
 		GazeStruct GazeData = GetGazeStructure();
-		if (GazeData.confidence > 0.6 && GazeData.topic == "gaze.3d.01.")
-		{
-			//UE_LOG(LogTemp, Warning, TEXT("Confidence %f "), GazeData.confidence);
-			//UE_LOG(LogTemp, Warning, TEXT("Topic %s "), *FString(GazeData.topic.c_str()));
-			if (IgnoreSamples > SamplesToIgnoreForEyeMovement) // Ignore a few samples to account for people tracking the object
-			{
-				// Get headset position and orientation
+        if (GazeData.confidence > 0.6 && GazeData.topic == "gaze.3d.01.")
+        {
+            //UE_LOG(LogTemp, Warning, TEXT("Confidence %f "), GazeData.confidence);
+            //UE_LOG(LogTemp, Warning, TEXT("Topic %s "), *FString(GazeData.topic.c_str()));
+            if (IgnoreSamples > SamplesToIgnoreForEyeMovement) // Ignore a few samples to account for people tracking the object
+            {
+                // Get headset position and orientation
                 APlayerCameraManager* camManager = WorldRef->GetFirstPlayerController()->PlayerCameraManager;
                 FVector HMDposition = camManager->GetCameraLocation();
-				FQuat HMDorientation = camManager->GetCameraRotation().Quaternion();
+                FQuat HMDorientation = camManager->GetCameraRotation().Quaternion();
 
-				// Guess for eye positions and locations-- todo make math better
-				FVector eye_offset_right_ue(-4, 3.15, -1.5);
-				FVector eye_offset_left_ue(-4, -3.15, -1.5);
-				Eigen::Vector3f e_r(-4, 3.15, -1.5);
-				Eigen::Vector3f e_l(-4, -3.15, -1.5);
-				//FVector eye_offset_right_ue(0, 0, 0);
-				//FVector eye_offset_left_ue(0, 0, 0);
-				//Eigen::Vector3f e_r(0, 0, 0);
-				//Eigen::Vector3f e_l(0, 0, 0);
-				eye_loc_right = e_r;
-				eye_loc_left = e_l;
+                // Guess for eye positions and locations-- todo make math better
+                FVector eye_offset_right_ue(-4, 3.15, -1.5);
+                FVector eye_offset_left_ue(-4, -3.15, -1.5);
+                Eigen::Vector3f e_r(-4, 3.15, -1.5);
+                Eigen::Vector3f e_l(-4, -3.15, -1.5);
+                //FVector eye_offset_right_ue(0, 0, 0);
+                //FVector eye_offset_left_ue(0, 0, 0);
+                //Eigen::Vector3f e_r(0, 0, 0);
+                //Eigen::Vector3f e_l(0, 0, 0);
+                eye_loc_right = e_r;
+                eye_loc_left = e_l;
 
-				FString temp_string = GetStringFromEigen(eye_loc_right);
-				WriteStringToProjectConfigFile(*FString("Calibration Results"), *FString("PupilSettings"), *FString("LOCATION_RIGHT"), *temp_string);
+                FString temp_string = GetStringFromEigen(eye_loc_right);
+                WriteStringToProjectConfigFile(*FString("Calibration Results"), *FString("PupilSettings"), *FString("LOCATION_RIGHT"), *temp_string);
 
-				temp_string = GetStringFromEigen(eye_loc_left);
-				WriteStringToProjectConfigFile(*FString("Calibration Results"), *FString("PupilSettings"), *FString("LOCATION_LEFT"), *temp_string);
+                temp_string = GetStringFromEigen(eye_loc_left);
+                WriteStringToProjectConfigFile(*FString("Calibration Results"), *FString("PupilSettings"), *FString("LOCATION_LEFT"), *temp_string);
 
-				// Calculate Calibration object relative transform to headset
-                FTransform HMDTransform = FTransform(HMDorientation, HMDposition+eye_offset_right_ue);
-				FTransform HMDTransform2 = FTransform(HMDorientation, HMDposition + eye_offset_left_ue);
+                // Calculate Calibration object relative transform to headset
+                FTransform HMDTransform = FTransform(HMDorientation, HMDposition + eye_offset_right_ue);
+                FTransform HMDTransform2 = FTransform(HMDorientation, HMDposition + eye_offset_left_ue);
                 static const FQuat Identity;
                 FTransform CalTransform = FTransform(Identity, CalibrationLocations[calPoints]);
-				FTransform CalTransform2 = FTransform(Identity, CalibrationLocations[calPoints]);
+                FTransform CalTransform2 = FTransform(Identity, CalibrationLocations[calPoints]);
                 FTransform CaltoHMD = UKismetMathLibrary::MakeRelativeTransform(CalTransform, HMDTransform);
-				FTransform CaltoHMD2 = UKismetMathLibrary::MakeRelativeTransform(CalTransform2, HMDTransform2);
-				std::map<std::string, vector_3d> gaze_normals_3d = GazeData.gaze_normals_3d;
-				for (std::map<std::string, vector_3d>::iterator it = gaze_normals_3d.begin(); it != gaze_normals_3d.end(); ++it)
-				{
-					std::string eye_d = it->first;
-					vector_3d eye_vec = it->second;
-					if (it->first == "0")
-					{
-						gazeDir_right.push_back(Eigen::Vector3f(it->second.x, it->second.y, it->second.z).normalized());
-					}
-					else if (it->first == "1")
-					{
-						gazeDir_left.push_back(Eigen::Vector3f(it->second.x, it->second.y, it->second.z).normalized());
-					}
-				}
+                FTransform CaltoHMD2 = UKismetMathLibrary::MakeRelativeTransform(CalTransform2, HMDTransform2);
+                std::map<int, vector_3d> gaze_normals_3d = GazeData.gaze_normals_3d;
+                for (std::map<int, vector_3d>::iterator it = gaze_normals_3d.begin(); it != gaze_normals_3d.end(); ++it)
+                {
+                    int eye_d = it->first;
+                    vector_3d eye_vec = it->second;
+                    if (it->first == 0)
+                    {
+                        gazeDir_right.push_back(Eigen::Vector3f(it->second.x, it->second.y, it->second.z).normalized());
+                    }
+                    else if (it->first == 1)
+                    {
+                        gazeDir_left.push_back(Eigen::Vector3f(it->second.x, it->second.y, it->second.z).normalized());
+                    }
+                }
                 // eyeLoc_right.push_back(Eigen::Vector3f(GazeData.eye_center_3d.x * 10, GazeData.eye_center_3d.y * 10, GazeData.eye_center_3d.z * 10));
                 calibrationLocationHeadsetFrame_right.push_back(Eigen::Vector3f(CaltoHMD.GetLocation()[0], CaltoHMD.GetLocation()[1], CaltoHMD.GetLocation()[2]));
                 calibrationDirectionHeadsetFrame_right.push_back(Eigen::Vector3f(CaltoHMD.GetLocation()[0] - (HMDposition[0] + eye_loc_right[0]), (CaltoHMD.GetLocation()[1] - (HMDposition[1] + eye_loc_right[1])), CaltoHMD.GetLocation()[2] - (HMDposition[2] + eye_loc_right[2])).normalized());
-				calibrationLocationHeadsetFrame_left.push_back(Eigen::Vector3f(CaltoHMD2.GetLocation()[0], CaltoHMD2.GetLocation()[1], CaltoHMD2.GetLocation()[2]));
-				calibrationDirectionHeadsetFrame_left.push_back(Eigen::Vector3f(CaltoHMD2.GetLocation()[0] - (HMDposition[0] + eye_loc_left[0]), (CaltoHMD2.GetLocation()[1] - (HMDposition[1] + eye_loc_left[1])), CaltoHMD2.GetLocation()[2] - (HMDposition[2] + eye_loc_left[2])).normalized());
-				CurrentCalibrationSamples++;//Increment the current calibration sample. (Default sample amount per calibration point is 120)
-			}
-			IgnoreSamples++;//Increment the current calibration sample. (Default sample amount per calibration point is 120)
-		}
+                calibrationLocationHeadsetFrame_left.push_back(Eigen::Vector3f(CaltoHMD2.GetLocation()[0], CaltoHMD2.GetLocation()[1], CaltoHMD2.GetLocation()[2]));
+                calibrationDirectionHeadsetFrame_left.push_back(Eigen::Vector3f(CaltoHMD2.GetLocation()[0] - (HMDposition[0] + eye_loc_left[0]), (CaltoHMD2.GetLocation()[1] - (HMDposition[1] + eye_loc_left[1])), CaltoHMD2.GetLocation()[2] - (HMDposition[2] + eye_loc_left[2])).normalized());
+                CurrentCalibrationSamples++;//Increment the current calibration sample. (Default sample amount per calibration point is 120)
+            }
+            IgnoreSamples++;//Increment the current calibration sample. (Default sample amount per calibration point is 120)
+        }
 
-		if (CurrentCalibrationSamples >= CurrentCalibrationSamplesPerDepth)
-		{
-			CurrentCalibrationSamples = 0;
-			IgnoreSamples = 0;
-			calPoints++;
-			FLatentActionInfo LatentInfo;
-			LatentInfo.CallbackTarget = CalibrationMarker;
-			UKismetSystemLibrary::MoveComponentTo(CalibrationMarker->meshName, CalibrationLocations[calPoints],
-				FRotator(0), false, false, 0.5f, true,
-				EMoveComponentAction::Type::Move, LatentInfo);
-			// CalibrationMarker->SetActorLocation(CalibrationLocations[calPoints]);
-			UE_LOG(LogTemp, Warning, TEXT("[%s][%d] : %s"), TEXT(__FUNCTION__), __LINE__, TEXT("MoveCalActor"));
-		}
+        if (CurrentCalibrationSamples >= CurrentCalibrationSamplesPerDepth)
+        {
+            CurrentCalibrationSamples = 0;
+            IgnoreSamples = 0;
+            calPoints++;
+            FLatentActionInfo LatentInfo;
+            LatentInfo.CallbackTarget = CalibrationMarker;
+            UKismetSystemLibrary::MoveComponentTo(CalibrationMarker->meshName, CalibrationLocations[calPoints],
+                FRotator(0), false, false, 0.5f, true,
+                EMoveComponentAction::Type::Move, LatentInfo);
+            // CalibrationMarker->SetActorLocation(CalibrationLocations[calPoints]);
+            UE_LOG(LogTemp, Warning, TEXT("[%s][%d] : %s"), TEXT(__FUNCTION__), __LINE__, TEXT("MoveCalActor"));
+        }
 
-		if (calPoints > 4)
-		{
-			bCalibrationProgressing = false;
-			Rotation_r = Wahba(gazeDir_right, calibrationDirectionHeadsetFrame_right);
-			Rotation_l = Wahba(gazeDir_left, calibrationDirectionHeadsetFrame_left);
-			FString temp_string = GetStringFromEigen(Rotation_r);
-			WriteStringToProjectConfigFile(*FString("Calibration Results"), *FString("PupilSettings"), *FString("TRANSFORM_RIGHT"), *temp_string);
-			temp_string = GetStringFromEigen(Rotation_l);
-			WriteStringToProjectConfigFile(*FString("Calibration Results"), *FString("PupilSettings"), *FString("TRANSFORM_LEFT"), *temp_string);
-			UE_LOG(LogTemp, Warning, TEXT("Matrix Norm: %f"), MatrixNorm(Rotation_r, Rotation_l));
-			Eigen::Quaternionf q(Rotation_r);
-			FRotator UERot = FRotator(FQuat(q.x(), q.y(), q.z(), q.w()));
-			UE_LOG(LogTemp, Warning, TEXT("Vector: %f %f %f"), UERot.Pitch, UERot.Roll, UERot.Yaw);
-			CalibrationMarker->Destroy();
-		}
+        if (calPoints > 4)
+        {
+            bCalibrationProgressing = false;
+            Rotation_r = Wahba(gazeDir_right, calibrationDirectionHeadsetFrame_right);
+            Rotation_l = Wahba(gazeDir_left, calibrationDirectionHeadsetFrame_left);
+            FString temp_string = GetStringFromEigen(Rotation_r);
+            WriteStringToProjectConfigFile(*FString("Calibration Results"), *FString("PupilSettings"), *FString("TRANSFORM_RIGHT"), *temp_string);
+            temp_string = GetStringFromEigen(Rotation_l);
+            WriteStringToProjectConfigFile(*FString("Calibration Results"), *FString("PupilSettings"), *FString("TRANSFORM_LEFT"), *temp_string);
+            UE_LOG(LogTemp, Warning, TEXT("Matrix Norm: %f"), MatrixNorm(Rotation_r, Rotation_l));
+            Eigen::Quaternionf q(Rotation_r);
+            FRotator UERot = FRotator(FQuat(q.x(), q.y(), q.z(), q.w()));
+            UE_LOG(LogTemp, Warning, TEXT("Vector: %f %f %f"), UERot.Pitch, UERot.Roll, UERot.Yaw);
+            CalibrationMarker->Destroy();
+        }
 	}
 }
 
