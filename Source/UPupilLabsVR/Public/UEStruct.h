@@ -10,6 +10,8 @@ struct FUEStruct
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Pupil Data")
 		float confidence;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Pupil Data")
+		FString eye_tracker;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Pupil Data")
 		FVector eye_loc_r;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Pupil Data")
 		FVector gaze_dir_r;
@@ -25,4 +27,6 @@ struct FUEStruct
 		FQuat gaze_rot_l;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Pupil Data")
 		float pupil_d_l;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Pupil Data")
+		FVector gaze_point;
 };

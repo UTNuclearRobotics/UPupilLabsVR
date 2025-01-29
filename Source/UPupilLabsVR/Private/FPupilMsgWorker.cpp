@@ -69,8 +69,8 @@ uint32 FPupilMsgWorker::Run()
 			//FFileHelper::SaveStringToFile(write_data, *(FPaths::ProjectConfigDir() + UTF8TEXT("SaveFileTestPL")), FFileHelper::EEncodingOptions::AutoDetect, &IFileManager::Get(), FILEWRITE_Append);
 			//GazeStruct ReceivedGazeStruct;
 			//UE_LOG(LogTemp, Warning, TEXT("MessageReceived"));
-			FString test(GazeData.topic.c_str());
-			UE_LOG(LogTemp, Warning, TEXT("%s"), *test);
+			//FString test(GazeData.topic.c_str());
+			//UE_LOG(LogTemp, Warning, TEXT("%s"), *test);
 			NewPupilDataEvent.Broadcast(&GazeData);
 		}
 	}

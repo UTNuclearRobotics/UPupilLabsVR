@@ -24,6 +24,13 @@ struct gaze_normal_3d {
 	MSGPACK_DEFINE_ARRAY(x, y, z);
 };
 
+struct gaze_point_3d {
+	float x;
+	float y;
+	float z;
+	MSGPACK_DEFINE_ARRAY(x, y, z);
+};
+
 struct vector_3d {
 	float x;
 	float y;
@@ -60,12 +67,12 @@ struct pupil {
 	std::string topic;
 	float confidence;
 	ellipse ellipse;
-	float diameter;
+	float diameter_3d;
 	norm_pos norm_pos;
 	float timestamp;
 	std::string method;
 	float id;
-	MSGPACK_DEFINE_MAP(topic, confidence, ellipse, diameter, norm_pos, timestamp, method, id);
+	MSGPACK_DEFINE_MAP(topic, confidence, ellipse, diameter_3d, norm_pos, timestamp, method, id);
 };
 
 struct base_data {
@@ -77,6 +84,7 @@ struct base_data {
 struct GazeStruct {
 	eye_center_3d eye_center_3d;
 	gaze_normal_3d gaze_normal_3d;
+	gaze_point_3d gaze_point_3d;
 	std::map<int, vector_3d> eye_centers_3d;
 	std::map<int, vector_3d> gaze_normals_3d;
 	std::string topic;
@@ -85,7 +93,7 @@ struct GazeStruct {
 	float confidence;
 	float id;
 	float timestamp;
-	MSGPACK_DEFINE_MAP(eye_center_3d, gaze_normal_3d, eye_centers_3d, gaze_normals_3d, topic, norm_pos, confidence, id, timestamp, base_data);
+	MSGPACK_DEFINE_MAP(eye_center_3d, gaze_normal_3d, gaze_point_3d, eye_centers_3d, gaze_normals_3d, topic, norm_pos, confidence, id, timestamp, base_data);
 };
 
 //Todo move in struct folder
